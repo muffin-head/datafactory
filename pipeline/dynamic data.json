@@ -24,6 +24,7 @@
 					],
 					"storeSettings": {
 						"type": "AzureBlobFSReadSettings",
+						"recursive": true,
 						"enablePartitionDiscovery": false
 					}
 				}
@@ -71,6 +72,16 @@
 										},
 										"userProperties": [],
 										"typeProperties": {
+											"dataflow": {
+												"referenceName": "dataflow2",
+												"type": "DataFlowReference",
+												"parameters": {
+													"file": {
+														"value": "'@{item().name}'",
+														"type": "Expression"
+													}
+												}
+											},
 											"compute": {
 												"coreCount": 8,
 												"computeType": "General"

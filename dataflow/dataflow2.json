@@ -14,6 +14,10 @@
 			],
 			"sinks": [
 				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
 					"name": "sink1"
 				}
 			],
@@ -26,6 +30,9 @@
 				}
 			],
 			"scriptLines": [
+				"parameters{",
+				"     file as string",
+				"}",
 				"source(output(",
 				"          EmployeeID as string,",
 				"          CashCentreID as string,",
@@ -48,13 +55,23 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false) ~> source1",
+				"     ignoreNoFilesFound: false,",
+				"     wildcardPaths:[($file)]) ~> source1",
 				"source1 derive(validate = true()) ~> derivedColumn1",
 				"source1, derivedColumn1 union(byName: true)~> union1",
 				"union1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'schema',",
+				"     tableName: ($file),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> sink1"
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}
