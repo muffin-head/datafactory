@@ -55,9 +55,24 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@startswith(string(item()),pipeline().parameters.sourcename)",
+									"value": "@startswith(string(item().name),pipeline().parameters.sourcename)",
 									"type": "Expression"
 								},
+								"ifFalseActivities": [
+									{
+										"name": "Fail1",
+										"type": "Fail",
+										"dependsOn": [],
+										"userProperties": [],
+										"typeProperties": {
+											"message": {
+												"value": "@item.name",
+												"type": "Expression"
+											},
+											"errorCode": " @item.name"
+										}
+									}
+								],
 								"ifTrueActivities": [
 									{
 										"name": "Data flow1",
