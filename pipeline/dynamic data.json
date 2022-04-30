@@ -36,7 +36,7 @@
 					{
 						"activity": "Get Metadata1",
 						"dependencyConditions": [
-							"Succeeded"
+							"Failed"
 						]
 					}
 				],
@@ -55,7 +55,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@startswith(string(item().name),pipeline().parameters.sourcename)",
+									"value": "@startswith(toLower(string(item().name)),'cashcenter01.xlsx' )",
 									"type": "Expression"
 								},
 								"ifFalseActivities": [
@@ -105,6 +105,40 @@
 										}
 									}
 								]
+							}
+						}
+					]
+				}
+			},
+			{
+				"name": "If Condition1_copy1",
+				"type": "IfCondition",
+				"dependsOn": [
+					{
+						"activity": "Get Metadata1",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"expression": {
+						"value": "@startswith(string(activity('Get Metadata1').output.name[0]),'cashcenter01.xlsx' )",
+						"type": "Expression"
+					},
+					"ifFalseActivities": [
+						{
+							"name": "Fail1_copy1",
+							"type": "Fail",
+							"dependsOn": [],
+							"userProperties": [],
+							"typeProperties": {
+								"message": {
+									"value": "@item.name",
+									"type": "Expression"
+								},
+								"errorCode": " @item.name"
 							}
 						}
 					]
