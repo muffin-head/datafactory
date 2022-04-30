@@ -88,7 +88,7 @@
 									"userProperties": [],
 									"typeProperties": {
 										"expression": {
-											"value": "@startswith(item(),pipeline().parameters.sourcename)",
+											"value": "@startswith(string(item()),pipeline().parameters.sourcename)",
 											"type": "Expression"
 										},
 										"ifTrueActivities": [
