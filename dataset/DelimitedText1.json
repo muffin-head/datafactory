@@ -1,0 +1,57 @@
+{
+	"name": "DelimitedText1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "sch.csv",
+				"fileSystem": "data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "File header ID",
+				"type": "String"
+			},
+			{
+				"name": "file header description",
+				"type": "String"
+			},
+			{
+				"name": "Start date",
+				"type": "String"
+			},
+			{
+				"name": "End Date ",
+				"type": "String"
+			},
+			{
+				"name": "File item name ",
+				"type": "String"
+			},
+			{
+				"name": "Rows loaded",
+				"type": "String"
+			},
+			{
+				"name": "Rows rejected error",
+				"type": "String"
+			},
+			{
+				"name": "Status",
+				"type": "String"
+			}
+		]
+	},
+	"type": "Microsoft.DataFactory/factories/datasets"
+}
