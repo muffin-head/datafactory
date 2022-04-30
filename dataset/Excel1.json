@@ -1,0 +1,93 @@
+{
+	"name": "Excel1",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "data"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "EmployeeID",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreID",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreShiftID",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreTeamID",
+				"type": "String"
+			},
+			{
+				"name": "PayRollNumber",
+				"type": "String"
+			},
+			{
+				"name": "FirstName",
+				"type": "String"
+			},
+			{
+				"name": "LastName",
+				"type": "String"
+			},
+			{
+				"name": "DisplayName",
+				"type": "String"
+			},
+			{
+				"name": "CreatedBy",
+				"type": "String"
+			},
+			{
+				"name": "CreatedOn",
+				"type": "String"
+			},
+			{
+				"name": "UpdatedBy",
+				"type": "String"
+			},
+			{
+				"name": "DeletedBy",
+				"type": "String"
+			},
+			{
+				"name": "RowLockVersion",
+				"type": "String"
+			},
+			{
+				"name": "IsActive",
+				"type": "String"
+			},
+			{
+				"name": "Mobilenumber",
+				"type": "String"
+			},
+			{
+				"name": "Address ",
+				"type": "String"
+			},
+			{
+				"name": "start date",
+				"type": "String"
+			},
+			{
+				"name": "end date",
+				"type": "String"
+			}
+		]
+	}
+}

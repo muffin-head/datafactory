@@ -1,0 +1,61 @@
+{
+	"name": "dataflow2",
+	"properties": {
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "cashcenter_and_type_region",
+						"type": "DatasetReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [
+				{
+					"name": "sink1"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "union1"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          EmployeeID as string,",
+				"          CashCentreID as string,",
+				"          CashCentreShiftID as string,",
+				"          CashCentreTeamID as string,",
+				"          PayRollNumber as string,",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          DisplayName as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as string,",
+				"          UpdatedBy as string,",
+				"          DeletedBy as string,",
+				"          RowLockVersion as string,",
+				"          IsActive as string,",
+				"          Mobilenumber as string,",
+				"          {Address } as string,",
+				"          {start date} as string,",
+				"          {end date} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false) ~> source1",
+				"source1 derive(validate = true()) ~> derivedColumn1",
+				"source1, derivedColumn1 union(byName: true)~> union1",
+				"union1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> sink1"
+			]
+		}
+	}
+}
