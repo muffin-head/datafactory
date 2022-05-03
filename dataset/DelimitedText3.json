@@ -1,0 +1,67 @@
+{
+	"name": "DelimitedText3",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "DelimitedText",
+		"typeProperties": {
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "data"
+			},
+			"columnDelimiter": ",",
+			"escapeChar": "\\",
+			"firstRowAsHeader": true,
+			"quoteChar": "\""
+		},
+		"schema": [
+			{
+				"name": "TANMAY0",
+				"type": "String"
+			},
+			{
+				"name": "Prop_1",
+				"type": "String"
+			},
+			{
+				"name": "TANMAY2",
+				"type": "String"
+			},
+			{
+				"name": "TANMAY3",
+				"type": "String"
+			},
+			{
+				"name": "V0.1",
+				"type": "String"
+			},
+			{
+				"name": "true",
+				"type": "String"
+			},
+			{
+				"name": "9687595126",
+				"type": "String"
+			},
+			{
+				"name": "40049 Clemons Street",
+				"type": "String"
+			},
+			{
+				"name": "01/03/22",
+				"type": "String"
+			},
+			{
+				"name": "31/03/22",
+				"type": "String"
+			},
+			{
+				"name": "1254635",
+				"type": "String"
+			}
+		]
+	}
+}

@@ -1,0 +1,102 @@
+{
+	"name": "ConvergencePurview",
+	"properties": {
+		"folder": {
+			"name": "test"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "linkedService3",
+						"type": "LinkedServiceReference"
+					},
+					"name": "RegionSource"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService3",
+						"type": "LinkedServiceReference"
+					},
+					"name": "CashcenterSource"
+				}
+			],
+			"sinks": [
+				{
+					"dataset": {
+						"referenceName": "DelimitedText3",
+						"type": "DatasetReference"
+					},
+					"name": "ConvergingData"
+				}
+			],
+			"transformations": [
+				{
+					"name": "joinData"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          RegionID as short,",
+				"          RegionCode as short,",
+				"          RegionDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     container: 'dynamicdata',",
+				"     fileName: 'regioncsv.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> RegionSource",
+				"source(output(",
+				"          CashCentreID as integer,",
+				"          {  CashCentreTypeID} as short,",
+				"          { RegionID} as short,",
+				"          CashCentreCode as integer,",
+				"          CashCentreDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'delimited',",
+				"     container: 'dynamicdata',",
+				"     fileName: 'cashcentercsv.csv',",
+				"     columnDelimiter: ',',",
+				"     escapeChar: '\\\\',",
+				"     quoteChar: '\\\"',",
+				"     columnNamesAsHeader: true) ~> CashcenterSource",
+				"RegionSource, CashcenterSource join(RegionID == { RegionID},",
+				"     joinType:'outer',",
+				"     broadcast: 'auto')~> joinData",
+				"joinData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     input(",
+				"          TANMAY0 as string,",
+				"          Prop_1 as string,",
+				"          TANMAY2 as string,",
+				"          TANMAY3 as string,",
+				"          {V0.1} as string,",
+				"          true as string,",
+				"          {9687595126} as string,",
+				"          {40049 Clemons Street} as string,",
+				"          {01/03/22} as string,",
+				"          {31/03/22} as string,",
+				"          {1254635} as string",
+				"     ),",
+				"     umask: 0022,",
+				"     preCommands: [],",
+				"     postCommands: [],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true) ~> ConvergingData"
+			]
+		}
+	}
+}
