@@ -1,0 +1,50 @@
+{
+	"name": "Excel5",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "linkedService3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobStorageLocation",
+				"fileName": "@item().name",
+				"container": "dynamicdata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "CashCentreID",
+				"type": "String"
+			},
+			{
+				"name": "  CashCentreTypeID",
+				"type": "String"
+			},
+			{
+				"name": " RegionID",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreCode",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreDescription",
+				"type": "String"
+			},
+			{
+				"name": "RowLockVersion",
+				"type": "String"
+			},
+			{
+				"name": "IsActive",
+				"type": "String"
+			}
+		]
+	}
+}
