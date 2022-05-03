@@ -11,7 +11,7 @@
 			"sheetName": "Sheet1",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileSystem": "data"
+				"fileSystem": "dynamicdata"
 			},
 			"firstRowAsHeader": true
 		},
