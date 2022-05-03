@@ -1,0 +1,61 @@
+{
+	"name": "dynamicDataDuplidaceDWH",
+	"properties": {
+		"folder": {
+			"name": "DWH"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "linkedService2",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SilverPIPELINE"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "linkedService2",
+						"type": "LinkedServiceReference"
+					},
+					"name": "GoldLineage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "REMOVEDUP"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     parameter1 as string",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$parameter1)),",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
+				"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
+				"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
+				"REMOVEDUP sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('gold/', $parameter1)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage"
+			]
+		}
+	}
+}
