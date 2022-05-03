@@ -18,7 +18,7 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "linkedService2",
+						"referenceName": "sqldata",
 						"type": "LinkedServiceReference"
 					},
 					"name": "SilverLineage"
