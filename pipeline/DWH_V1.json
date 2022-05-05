@@ -95,12 +95,32 @@
 												"referenceName": "dynamicColumnDWH",
 												"type": "DataFlowReference",
 												"parameters": {
-													"parameter1": {
+													"source": {
 														"value": "'@{item().name}'",
 														"type": "Expression"
 													},
-													"parameter2": {
+													"sink": {
 														"value": "'@{item().name}'",
+														"type": "Expression"
+													},
+													"parameter1": {
+														"value": "'@{pipeline().parameters.COLclean1}'",
+														"type": "Expression"
+													},
+													"parameter2": {
+														"value": "'@{pipeline().parameters.COLclean2}'",
+														"type": "Expression"
+													},
+													"parameter3": {
+														"value": "'@{pipeline().parameters.COLclean3}'",
+														"type": "Expression"
+													},
+													"parameter4": {
+														"value": "'@{pipeline().parameters.COLclean4}'",
+														"type": "Expression"
+													},
+													"parameter5": {
+														"value": "'@{pipeline().parameters.COLclean5}'",
 														"type": "Expression"
 													}
 												}
@@ -164,7 +184,7 @@
 												"referenceName": "dynamicDataDuplidaceDWH",
 												"type": "DataFlowReference",
 												"parameters": {
-													"parameter1": {
+													"filename": {
 														"value": "'@{item().name}'",
 														"type": "Expression"
 													}
@@ -186,6 +206,21 @@
 		],
 		"parameters": {
 			"file": {
+				"type": "string"
+			},
+			"COLclean1": {
+				"type": "string"
+			},
+			"COLclean2": {
+				"type": "string"
+			},
+			"COLclean3": {
+				"type": "string"
+			},
+			"COLclean4": {
+				"type": "string"
+			},
+			"COLclean5": {
 				"type": "string"
 			}
 		},
