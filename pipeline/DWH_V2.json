@@ -3,7 +3,7 @@
 	"properties": {
 		"activities": [
 			{
-				"name": "Lookup2_copy1",
+				"name": "LookupData",
 				"type": "Lookup",
 				"dependsOn": [],
 				"policy": {
@@ -35,7 +35,7 @@
 				"type": "ForEach",
 				"dependsOn": [
 					{
-						"activity": "Lookup2_copy1",
+						"activity": "LookupData",
 						"dependencyConditions": [
 							"Succeeded"
 						]
