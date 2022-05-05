@@ -62,7 +62,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"expression": {
-									"value": "@and(equals(string(item().name),activity('Lookup2').output.value[0]),equals(string(item().name),string(pipeline().parameters.file)))",
+									"value": "@equals(string(item().name),string(pipeline().parameters.file))",
 									"type": "Expression"
 								},
 								"ifFalseActivities": [
@@ -221,21 +221,6 @@
 		],
 		"parameters": {
 			"file": {
-				"type": "string"
-			},
-			"COLclean1": {
-				"type": "string"
-			},
-			"COLclean2": {
-				"type": "string"
-			},
-			"COLclean3": {
-				"type": "string"
-			},
-			"COLclean4": {
-				"type": "string"
-			},
-			"COLclean5": {
 				"type": "string"
 			}
 		},
