@@ -1,0 +1,46 @@
+{
+	"name": "Excel6",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "cleanfile.xlsx",
+				"fileSystem": "dynamicdata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "data",
+				"type": "String"
+			},
+			{
+				"name": "col1",
+				"type": "String"
+			},
+			{
+				"name": "col2",
+				"type": "String"
+			},
+			{
+				"name": "col3",
+				"type": "String"
+			},
+			{
+				"name": "col4",
+				"type": "String"
+			},
+			{
+				"name": "col5",
+				"type": "String"
+			}
+		]
+	}
+}
