@@ -27,11 +27,15 @@
 			"transformations": [
 				{
 					"name": "REMOVEDUP"
+				},
+				{
+					"name": "aggregate1"
 				}
 			],
 			"scriptLines": [
 				"parameters{",
-				"     filename as string",
+				"     filename as string,",
+				"     parameter1 as integer",
 				"}",
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -42,7 +46,9 @@
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
 				"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
 				"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
-				"REMOVEDUP sink(allowSchemaDrift: true,",
+				"REMOVEDUP aggregate(groupBy(CashCentreTypeID = hasColumn('CashCentreTypeID')),",
+				"     each(match(name=='payment'), $$ = sum($parameter1))) ~> aggregate1",
+				"aggregate1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
