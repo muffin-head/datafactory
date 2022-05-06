@@ -33,6 +33,9 @@
 				},
 				{
 					"name": "RegexNum"
+				},
+				{
+					"name": "derivedColumn1"
 				}
 			],
 			"scriptLines": [
@@ -51,7 +54,8 @@
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
 				"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
 				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
-				"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"derivedColumn1 derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"RegexSTR derive(each(match(name==$parameter3||name==$parameter4), $$ = ERROR_FUNCTION(''))) ~> derivedColumn1",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
