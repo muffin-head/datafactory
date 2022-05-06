@@ -22,6 +22,20 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "GoldLineage"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
 				}
 			],
 			"transformations": [
@@ -30,12 +44,17 @@
 				},
 				{
 					"name": "aggregate1"
+				},
+				{
+					"name": "aggregate2"
 				}
 			],
 			"scriptLines": [
 				"parameters{",
 				"     filename as string,",
-				"     parameter1 as integer",
+				"     groupby as string,",
+				"     payment as string,",
+				"     date as string",
 				"}",
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -46,9 +65,11 @@
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
 				"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
 				"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
-				"REMOVEDUP aggregate(groupBy(CashCentreTypeID = hasColumn('CashCentreTypeID')),",
-				"     each(match(name=='payment'), $$ = sum($parameter1))) ~> aggregate1",
-				"aggregate1 sink(allowSchemaDrift: true,",
+				"SilverPIPELINE aggregate(groupBy(totalPayment = toString(byName($groupby))),",
+				"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate1",
+				"SilverPIPELINE aggregate(groupBy(monthTotal = month(toDate($date))),",
+				"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate2",
+				"REMOVEDUP sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
@@ -60,7 +81,33 @@
 				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage"
+				"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage",
+				"aggregate1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('gold_aggregation/', $filename)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+				"aggregate2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('gold_dateTotal/', $filename)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
 			]
 		}
 	}
