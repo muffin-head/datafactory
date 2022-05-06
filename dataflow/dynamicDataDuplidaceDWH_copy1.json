@@ -67,7 +67,7 @@
 				"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
 				"SilverPIPELINE aggregate(groupBy(totalPayment = toString(byName($groupby))),",
 				"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate1",
-				"SilverPIPELINE aggregate(groupBy(monthTotal = month(toDate($date))),",
+				"SilverPIPELINE aggregate(groupBy(monthTotal = month(toDate(toString(byName($date))))),",
 				"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate2",
 				"REMOVEDUP sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",

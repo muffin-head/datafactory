@@ -10,6 +10,13 @@
 						"type": "DatasetReference"
 					},
 					"name": "source1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source2"
 				}
 			],
 			"sinks": [
@@ -27,12 +34,18 @@
 				},
 				{
 					"name": "union1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "aggregate2"
 				}
 			],
 			"scriptLines": [
-				"parameters{",
-				"     file as string",
-				"}",
 				"source(output(",
 				"          EmployeeID as string,",
 				"          CashCentreID as string,",
@@ -57,8 +70,30 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     wildcardPaths:[($file)]) ~> source1",
+				"source(output(",
+				"          CashCentreTypeID as string,",
+				"          CashCentreTypeCode as string,",
+				"          CashCentreTypeDescription as string,",
+				"          RowLockVersion as string,",
+				"          IsActive as string,",
+				"          pass as string,",
+				"          Month as string,",
+				"          payment as string,",
+				"          validate as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'silver/cashcentertype.xlsx',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> source2",
 				"source1 derive(validate = true()) ~> derivedColumn1",
 				"source1, derivedColumn1 union(byName: true)~> union1",
+				"derivedColumn2 aggregate(groupBy(monthtotal = month(toDate(Month))),",
+				"     each(match(name=='payment'), $$ = sum(toInteger($$)))) ~> aggregate1",
+				"source2 derive(aa = (toDate(toInteger(Month)))) ~> derivedColumn2",
+				"derivedColumn1 aggregate() ~> aggregate2",
 				"union1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",

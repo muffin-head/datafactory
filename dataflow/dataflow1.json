@@ -6,10 +6,13 @@
 			"sources": [
 				{
 					"linkedService": {
-						"referenceName": "AzureDataLakeStorage1",
+						"referenceName": "linkedService3",
 						"type": "LinkedServiceReference"
 					},
 					"name": "source1"
+				},
+				{
+					"name": "source2"
 				}
 			],
 			"sinks": [
@@ -23,42 +26,51 @@
 			],
 			"transformations": [
 				{
-					"name": "select1"
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "aggregate1"
+				},
+				{
+					"name": "aggregate2"
+				},
+				{
+					"name": "aggregate3"
+				},
+				{
+					"name": "aggregate4"
 				}
 			],
 			"scriptLines": [
 				"source(output(",
-				"          {File header ID} as short,",
-				"          {file header description} as string,",
-				"          {Start date} as string,",
-				"          {End Date } as string,",
-				"          {File item name } as string,",
-				"          {Rows loaded} as short,",
-				"          {Rows rejected error} as boolean,",
-				"          Status as string",
+				"          CashCentreTypeID as short,",
+				"          CashCentreTypeCode as integer,",
+				"          CashCentreTypeDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean,",
+				"          pass as string,",
+				"          Month as date 'dd/MM/yyyy',",
+				"          payment as integer",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
-				"     format: 'delimited',",
-				"     fileSystem: 'newdata',",
-				"     fileName: 'anc.csv',",
-				"     columnDelimiter: ',',",
-				"     escapeChar: '\\\\',",
-				"     quoteChar: '\\\"',",
-				"     columnNamesAsHeader: true) ~> source1",
-				"source1 select(mapColumn(",
-				"          {File header ID},",
-				"          {file header description},",
-				"          {Start date},",
-				"          {End Date },",
-				"          {Rows loaded},",
-				"          {Rows rejected error},",
-				"          Status",
-				"     ),",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true) ~> select1",
-				"select1 sink(allowSchemaDrift: true,",
+				"     format: 'excel',",
+				"     container: 'dynamicdata',",
+				"     fileName: 'cashcentertype.xlsx',",
+				"     sheetName: 'Sheet1',",
+				"     firstRowAsHeader: true) ~> source1",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false) ~> source2",
+				"source1 derive(abc = toString(byName('CashCentreTypeID'))) ~> derivedColumn1",
+				"derivedColumn1 aggregate(groupBy(bb = toString(byName('CashCentreTypeID'))),",
+				"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate1",
+				"aggregate1 aggregate(groupBy(month = ERROR_FUNCTION('')),",
+				"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate2",
+				"source1 aggregate(groupBy(Month = month(Month)),",
+				"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate3",
+				"source2 aggregate() ~> aggregate4",
+				"aggregate2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'delimited',",
 				"     fileSystem: 'newdata',",
