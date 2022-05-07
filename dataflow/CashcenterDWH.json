@@ -72,10 +72,13 @@
 					"name": "NotexistsCashcenterID"
 				},
 				{
-					"name": "ValidateCashcentertype"
+					"name": "ValidateRegion"
 				},
 				{
-					"name": "ValidateRegion"
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "exists1"
 				}
 			],
 			"scriptLines": [
@@ -130,9 +133,9 @@
 				"     tableName: (concat('gold/', $cashcentertype)),",
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> cashCentertypeHash",
 				"source(output(",
-				"          CashCentreID as string,",
-				"          CashCentreTypeID as string,",
-				"          RegionID as string,",
+				"          CashCentreID as short,",
+				"          CashCentreTypeID as short,",
+				"          RegionID as short,",
 				"          CashCentreCode as string,",
 				"          CashCentreDescription as string,",
 				"          CreatedBy as string,",
@@ -142,7 +145,7 @@
 				"          DeletedBy as string,",
 				"          DeletedOn as string,",
 				"          RowLockVersion as string,",
-				"          IsActive as string",
+				"          IsActive as boolean",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -171,7 +174,7 @@
 				"     schemaName: 'dbo',",
 				"     tableName: 'DWH_cashcenter',",
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> sourcecashCenterhashStaging",
-				"ValidateRegion derive(sha = sha1(CashCentreID,CashCentreTypeID,RegionID,CashCentreCode,CashCentreDescription)) ~> derivedHashValue",
+				"ValidateRegion derive(sha = sha1(CashCentreID,cashcenter@CashCentreTypeID,RegionID,CashCentreCode,CashCentreDescription)) ~> derivedHashValue",
 				"derivedHashValue, sourcecashCenterhashStaging exists(derivedHashValue@sha == sourcecashCenterhashStaging@sha,",
 				"     negate:true,",
 				"     broadcast: 'auto')~> NotexistsSha",
@@ -183,12 +186,13 @@
 				"NotexistsSha, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
 				"     negate:true,",
 				"     broadcast: 'auto')~> NotexistsCashcenterID",
-				"cashcenter, cashCentertypeHash exists(toString(byName($existCashcentertype)) == toString(byName($existCashcentertype)),",
-				"     negate:false,",
-				"     broadcast: 'auto')~> ValidateCashcentertype",
-				"ValidateCashcentertype, RegionHash exists(toString(byName($existRegion)) == toString(byName($existRegion)),",
+				"exists1, RegionHash exists(toString(byName('RegionID','cashcenter')) == toString(byName('RegionID','RegionHash')) ,",
 				"     negate:false,",
 				"     broadcast: 'auto')~> ValidateRegion",
+				"cashCentertypeHash derive({toShort(byName($existCashcentertype))} = true()) ~> derivedColumn1",
+				"cashcenter, cashCentertypeHash exists(toString(byName('CashCentreTypeID','cashcenter')) == toString(byName('CashCentreTypeID','cashCentertypeHash')) ,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> exists1",
 				"Update sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
