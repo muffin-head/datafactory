@@ -1,0 +1,159 @@
+{
+	"name": "DWH_region_SQL",
+	"properties": {
+		"folder": {
+			"name": "DWH_sqlCashcenter"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sourceRegion"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DWHRegion"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DWHUpdateRegion"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DWHinsertRegion"
+				}
+			],
+			"transformations": [
+				{
+					"name": "generateHASH"
+				},
+				{
+					"name": "dosentexists"
+				},
+				{
+					"name": "insert"
+				},
+				{
+					"name": "NOTexistsRegionID"
+				},
+				{
+					"name": "update"
+				},
+				{
+					"name": "GenerateHash1"
+				},
+				{
+					"name": "existsRegionID"
+				},
+				{
+					"name": "DerivecolUpdateDeleted"
+				},
+				{
+					"name": "DerivecolumnInsertDeleted"
+				}
+			],
+			"scriptLines": [
+				"source(output(",
+				"          RegionID as integer,",
+				"          RegionCode as string,",
+				"          RegionDescription as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as timestamp,",
+				"          UpdatedBy as string,",
+				"          UpdatedOn as timestamp,",
+				"          DeletedBy as string,",
+				"          DeletedOn as timestamp,",
+				"          RowLockVersion as string,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'Region',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> sourceRegion",
+				"source(output(",
+				"          RegionID as integer,",
+				"          RegionCode as string,",
+				"          RegionDescription as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as timestamp,",
+				"          UpdatedBy as string,",
+				"          UpdatedOn as timestamp,",
+				"          DeletedBy as string,",
+				"          DeletedOn as timestamp,",
+				"          RowLockVersion as string,",
+				"          sha as string,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'DWH_region',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> DWHRegion",
+				"sourceRegion derive(sha = sha1(RegionID,RegionCode,RegionDescription,IsActive)) ~> generateHASH",
+				"generateHASH, GenerateHash1 exists(generateHASH@sha == GenerateHash1@sha,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> dosentexists",
+				"DerivecolumnInsertDeleted alterRow(insertIf(true())) ~> insert",
+				"dosentexists, DWHRegion exists(sourceRegion@RegionID == DWHRegion@RegionID,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> NOTexistsRegionID",
+				"DerivecolUpdateDeleted alterRow(updateIf(true())) ~> update",
+				"DWHRegion derive(sha = sha1(RegionID,RegionCode,RegionDescription,IsActive)) ~> GenerateHash1",
+				"dosentexists, DWHRegion exists(sourceRegion@RegionID == DWHRegion@RegionID,",
+				"     negate:false,",
+				"     broadcast: 'auto')~> existsRegionID",
+				"existsRegionID derive(UpdatedOn = currentTimestamp(),",
+				"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolUpdateDeleted",
+				"NOTexistsRegionID derive(CreatedOn = currentTimestamp(),",
+				"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolumnInsertDeleted",
+				"update sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'DWH_Region',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['RegionID'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> DWHUpdateRegion",
+				"insert sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'DWH_Region',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> DWHinsertRegion"
+			]
+		}
+	}
+}

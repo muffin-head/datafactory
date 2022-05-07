@@ -54,12 +54,6 @@
 			],
 			"transformations": [
 				{
-					"name": "derivedHashValue"
-				},
-				{
-					"name": "NotexistsSha"
-				},
-				{
 					"name": "existsCashcenterID"
 				},
 				{
@@ -174,16 +168,12 @@
 				"     schemaName: 'dbo',",
 				"     tableName: 'DWH_cashcenter',",
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> sourcecashCenterhashStaging",
-				"ValidateRegion derive(sha = sha1(CashCentreID,cashcenter@CashCentreTypeID,RegionID,CashCentreCode,CashCentreDescription)) ~> derivedHashValue",
-				"derivedHashValue, sourcecashCenterhashStaging exists(derivedHashValue@sha == sourcecashCenterhashStaging@sha,",
-				"     negate:true,",
-				"     broadcast: 'auto')~> NotexistsSha",
-				"NotexistsSha, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+				"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
 				"     negate:false,",
 				"     broadcast: 'auto')~> existsCashcenterID",
 				"existsCashcenterID alterRow(updateIf(true())) ~> Update",
 				"NotexistsCashcenterID alterRow(insertIf(true())) ~> Insert",
-				"NotexistsSha, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+				"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
 				"     negate:true,",
 				"     broadcast: 'auto')~> NotexistsCashcenterID",
 				"exists1, RegionHash exists(toString(byName('RegionID','cashcenter')) == toString(byName('RegionID','RegionHash')) ,",

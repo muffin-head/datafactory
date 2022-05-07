@@ -1,0 +1,46 @@
+{
+	"name": "Excel8",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage1",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "dynamicvalidation.xlsx",
+				"fileSystem": "dynamicdata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "cashcenter",
+				"type": "String"
+			},
+			{
+				"name": "cashcentertype",
+				"type": "String"
+			},
+			{
+				"name": "region",
+				"type": "String"
+			},
+			{
+				"name": "cashcentertypeid",
+				"type": "String"
+			},
+			{
+				"name": "regionid",
+				"type": "String"
+			},
+			{
+				"name": "cashcenterid",
+				"type": "String"
+			}
+		]
+	}
+}
