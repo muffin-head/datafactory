@@ -1,0 +1,222 @@
+{
+	"name": "CashcenterDWH",
+	"properties": {
+		"folder": {
+			"name": "DWH"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "RegionHash"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "cashCentertypeHash"
+				},
+				{
+					"dataset": {
+						"referenceName": "Excel7",
+						"type": "DatasetReference"
+					},
+					"name": "cashcenter"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sourcecashCenterhashStaging"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DWHCashcenterUpdate"
+				},
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "DWHCashcenterInsert"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedHashValue"
+				},
+				{
+					"name": "NotexistsSha"
+				},
+				{
+					"name": "existsCashcenterID"
+				},
+				{
+					"name": "Update"
+				},
+				{
+					"name": "Insert"
+				},
+				{
+					"name": "NotexistsCashcenterID"
+				},
+				{
+					"name": "ValidateCashcentertype"
+				},
+				{
+					"name": "ValidateRegion"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     region as string,",
+				"     cashcentertype as string,",
+				"     cashcenter as string,",
+				"     existCashcentertype as string,",
+				"     existRegion as string,",
+				"     existcashcenterID as string",
+				"}",
+				"source(output(",
+				"          RegionID as integer,",
+				"          RegionCode as string,",
+				"          RegionDescription as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as timestamp,",
+				"          UpdatedBy as string,",
+				"          UpdatedOn as timestamp,",
+				"          DeletedBy as string,",
+				"          DeletedOn as timestamp,",
+				"          RowLockVersion as string,",
+				"          sha as string,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('gold/', $region)),",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> RegionHash",
+				"source(output(",
+				"          CashCentreTypeID as integer,",
+				"          CashCentreTypeCode as string,",
+				"          CashCentreTypeDescription as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as timestamp,",
+				"          UpdatedBy as string,",
+				"          UpdatedOn as timestamp,",
+				"          DeletedBy as string,",
+				"          DeletedOn as timestamp,",
+				"          RowLockVersion as string,",
+				"          sha as string,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('gold/', $cashcentertype)),",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> cashCentertypeHash",
+				"source(output(",
+				"          CashCentreID as string,",
+				"          CashCentreTypeID as string,",
+				"          RegionID as string,",
+				"          CashCentreCode as string,",
+				"          CashCentreDescription as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as string,",
+				"          UpdatedBy as string,",
+				"          UpdatedOn as string,",
+				"          DeletedBy as string,",
+				"          DeletedOn as string,",
+				"          RowLockVersion as string,",
+				"          IsActive as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     wildcardPaths:[($cashcenter)]) ~> cashcenter",
+				"source(output(",
+				"          CashCentreID as integer,",
+				"          {  CashCentreTypeID} as short,",
+				"          { RegionID} as short,",
+				"          CashCentreCode as integer,",
+				"          CashCentreDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean,",
+				"          CashCentreTypeID as short,",
+				"          CashCentreTypeCode as integer,",
+				"          CashCentreTypeDescription as string,",
+				"          sha as string,",
+				"          RegionID as short,",
+				"          RegionCode as short,",
+				"          RegionDescription as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'DWH_cashcenter',",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> sourcecashCenterhashStaging",
+				"ValidateRegion derive(sha = sha1(CashCentreID,CashCentreTypeID,RegionID,CashCentreCode,CashCentreDescription)) ~> derivedHashValue",
+				"derivedHashValue, sourcecashCenterhashStaging exists(derivedHashValue@sha == sourcecashCenterhashStaging@sha,",
+				"     negate:true,",
+				"     broadcast: 'auto')~> NotexistsSha",
+				"NotexistsSha, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+				"     negate:false,",
+				"     broadcast: 'auto')~> existsCashcenterID",
+				"existsCashcenterID alterRow(updateIf(true())) ~> Update",
+				"NotexistsCashcenterID alterRow(insertIf(true())) ~> Insert",
+				"NotexistsSha, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+				"     negate:true,",
+				"     broadcast: 'auto')~> NotexistsCashcenterID",
+				"cashcenter, cashCentertypeHash exists(toString(byName($existCashcentertype)) == toString(byName($existCashcentertype)),",
+				"     negate:false,",
+				"     broadcast: 'auto')~> ValidateCashcentertype",
+				"ValidateCashcentertype, RegionHash exists(toString(byName($existRegion)) == toString(byName($existRegion)),",
+				"     negate:false,",
+				"     broadcast: 'auto')~> ValidateRegion",
+				"Update sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'DWH_cashcenter',",
+				"     insertable: false,",
+				"     updateable: true,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     keys:['CashCentreID'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> DWHCashcenterUpdate",
+				"Insert sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: 'DWH_cashcenter',",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> DWHCashcenterInsert"
+			]
+		}
+	}
+}
