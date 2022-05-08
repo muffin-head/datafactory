@@ -8,10 +8,9 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Sheet1",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "cleanfile.xlsx",
+				"fileName": "cleanfileSiver.xlsx",
 				"fileSystem": "dynamicdata"
 			},
 			"firstRowAsHeader": true
