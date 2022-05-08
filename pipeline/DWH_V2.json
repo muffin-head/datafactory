@@ -259,11 +259,6 @@
 				}
 			}
 		],
-		"parameters": {
-			"file": {
-				"type": "string"
-			}
-		},
 		"folder": {
 			"name": "DWH"
 		},

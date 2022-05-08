@@ -69,9 +69,6 @@
 					"name": "ValidateRegion"
 				},
 				{
-					"name": "derivedColumn1"
-				},
-				{
 					"name": "exists1"
 				}
 			],
@@ -176,11 +173,10 @@
 				"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
 				"     negate:true,",
 				"     broadcast: 'auto')~> NotexistsCashcenterID",
-				"exists1, RegionHash exists(toString(byName('RegionID','cashcenter')) == toString(byName('RegionID','RegionHash')) ,",
+				"exists1, RegionHash exists(toString(byName('RegionID','cashcenter')) == toString(byName('RegionID','RegionHash')),",
 				"     negate:false,",
 				"     broadcast: 'auto')~> ValidateRegion",
-				"cashCentertypeHash derive({toShort(byName($existCashcentertype))} = true()) ~> derivedColumn1",
-				"cashcenter, cashCentertypeHash exists(toString(byName('CashCentreTypeID','cashcenter')) == toString(byName('CashCentreTypeID','cashCentertypeHash')) ,",
+				"cashcenter, cashCentertypeHash exists(toString(byName('CashCentreTypeID','cashcenter')) == toString(byName('CashCentreTypeID','cashCentertypeHash')),",
 				"     negate:false,",
 				"     broadcast: 'auto')~> exists1",
 				"Update sink(allowSchemaDrift: true,",
