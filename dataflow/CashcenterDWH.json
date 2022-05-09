@@ -22,9 +22,9 @@
 					"name": "cashCentertypeHash"
 				},
 				{
-					"dataset": {
-						"referenceName": "Excel7",
-						"type": "DatasetReference"
+					"linkedService": {
+						"referenceName": "linkedService3",
+						"type": "LinkedServiceReference"
 					},
 					"name": "cashcenter"
 				},
@@ -123,24 +123,11 @@
 				"     schemaName: 'dbo',",
 				"     tableName: (concat('gold/', $cashcentertype)),",
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> cashCentertypeHash",
-				"source(output(",
-				"          CashCentreID as short,",
-				"          CashCentreTypeID as short,",
-				"          RegionID as short,",
-				"          CashCentreCode as string,",
-				"          CashCentreDescription as string,",
-				"          CreatedBy as string,",
-				"          CreatedOn as string,",
-				"          UpdatedBy as string,",
-				"          UpdatedOn as string,",
-				"          DeletedBy as string,",
-				"          DeletedOn as string,",
-				"          RowLockVersion as string,",
-				"          IsActive as boolean",
-				"     ),",
-				"     allowSchemaDrift: true,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet',",
+				"     container: 'dynamicdata',",
 				"     wildcardPaths:[($cashcenter)]) ~> cashcenter",
 				"source(output(",
 				"          CashCentreID as integer,",

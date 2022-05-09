@@ -13,6 +13,13 @@
 				},
 				{
 					"name": "source2"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService3",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source3"
 				}
 			],
 			"sinks": [
@@ -62,6 +69,10 @@
 				"     firstRowAsHeader: true) ~> source1",
 				"source(allowSchemaDrift: true,",
 				"     validateSchema: false) ~> source2",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'parquet') ~> source3",
 				"source1 derive(abc = toString(byName('CashCentreTypeID'))) ~> derivedColumn1",
 				"derivedColumn1 aggregate(groupBy(bb = toString(byName('CashCentreTypeID'))),",
 				"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate1",
