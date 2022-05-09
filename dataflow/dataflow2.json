@@ -30,9 +30,6 @@
 			],
 			"transformations": [
 				{
-					"name": "derivedColumn1"
-				},
-				{
 					"name": "union1"
 				},
 				{
@@ -40,9 +37,6 @@
 				},
 				{
 					"name": "derivedColumn2"
-				},
-				{
-					"name": "aggregate2"
 				}
 			],
 			"scriptLines": [
@@ -68,8 +62,7 @@
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
-				"     ignoreNoFilesFound: false,",
-				"     wildcardPaths:[($file)]) ~> source1",
+				"     ignoreNoFilesFound: false) ~> source1",
 				"source(output(",
 				"          CashCentreTypeID as string,",
 				"          CashCentreTypeCode as string,",
@@ -88,12 +81,10 @@
 				"     schemaName: 'dbo',",
 				"     tableName: 'silver/cashcentertype.xlsx',",
 				"     isolationLevel: 'READ_UNCOMMITTED') ~> source2",
-				"source1 derive(validate = true()) ~> derivedColumn1",
-				"source1, derivedColumn1 union(byName: true)~> union1",
+				"source1, source1 union(byName: true)~> union1",
 				"derivedColumn2 aggregate(groupBy(monthtotal = month(toDate(Month))),",
 				"     each(match(name=='payment'), $$ = sum(toInteger($$)))) ~> aggregate1",
 				"source2 derive(aa = (toDate(toInteger(Month)))) ~> derivedColumn2",
-				"derivedColumn1 aggregate() ~> aggregate2",
 				"union1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
