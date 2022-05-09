@@ -128,12 +128,32 @@
 														"referenceName": "dynamicColumnDWH",
 														"type": "DataFlowReference",
 														"parameters": {
-															"parameter1": {
+															"source": {
 																"value": "'@{item().name}'",
 																"type": "Expression"
 															},
-															"parameter2": {
+															"sink": {
 																"value": "'@{item().name}'",
+																"type": "Expression"
+															},
+															"parameter1": {
+																"value": "'@{pipeline().parameters.COLclean1}'",
+																"type": "Expression"
+															},
+															"parameter2": {
+																"value": "'@{pipeline().parameters.COLclean2}'",
+																"type": "Expression"
+															},
+															"parameter3": {
+																"value": "'@{pipeline().parameters.COLclean3}'",
+																"type": "Expression"
+															},
+															"parameter4": {
+																"value": "'@{pipeline().parameters.COLclean4}'",
+																"type": "Expression"
+															},
+															"parameter5": {
+																"value": "'@{pipeline().parameters.COLclean5}'",
 																"type": "Expression"
 															}
 														},
@@ -203,7 +223,7 @@
 														"referenceName": "dynamicDataDuplidaceDWH",
 														"type": "DataFlowReference",
 														"parameters": {
-															"parameter1": {
+															"filename": {
 																"value": "'@{item().name}'",
 																"type": "Expression"
 															}
@@ -235,6 +255,21 @@
 				"parameters": {
 					"file": {
 						"type": "string"
+					},
+					"COLclean1": {
+						"type": "string"
+					},
+					"COLclean2": {
+						"type": "string"
+					},
+					"COLclean3": {
+						"type": "string"
+					},
+					"COLclean4": {
+						"type": "string"
+					},
+					"COLclean5": {
+						"type": "string"
 					}
 				},
 				"folder": {
@@ -247,6 +282,612 @@
 				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWH')]",
 				"[concat(variables('factoryId'), '/datasets/Excel5')]",
 				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupData",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel6",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupData').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "InitialCopyDataflow_copy1_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicColumnDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"source": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"sink": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"parameter1": {
+													"value": "'@{item().col1}'",
+													"type": "Expression"
+												},
+												"parameter2": {
+													"value": "'@{item().col2}'",
+													"type": "Expression"
+												},
+												"parameter3": {
+													"value": "'@{item().col3}'",
+													"type": "Expression"
+												},
+												"parameter4": {
+													"value": "'@{item().col4}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"LocalStaging": {},
+												"SilverLineage": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "removeDuplicateDWH_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "InitialCopyDataflow_copy1_copy1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicDataDuplidaceDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"filename": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"groupby": {
+													"value": "'@{item().groupby}'",
+													"type": "Expression"
+												},
+												"payment": {
+													"value": "'@{item().col5}'",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "'@{item().monthlyPayment\n}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SilverPIPELINE": {},
+												"GoldLineage": {},
+												"sink1": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "ForEachDATA_copy1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel8",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value\n",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "CashcenterDWH",
+											"type": "DataFlowReference",
+											"parameters": {
+												"region": {
+													"value": "'@{item().region}'",
+													"type": "Expression"
+												},
+												"cashcentertype": {
+													"value": "'@{item().cashcentertype}'",
+													"type": "Expression"
+												},
+												"cashcenter": {
+													"value": "'@{item().cashcenter}'",
+													"type": "Expression"
+												},
+												"existCashcentertype": {
+													"value": "'@{item().cashcentertypeid}'",
+													"type": "Expression"
+												},
+												"existRegion": {
+													"value": "'@{item().regionid}'",
+													"type": "Expression"
+												},
+												"existcashcenterID": {
+													"value": "'@{item().cashcenterid}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RegionHash": {},
+												"cashCentertypeHash": {},
+												"cashcenter": {},
+												"sourcecashCenterhashStaging": {},
+												"DWHCashcenterUpdate": {},
+												"DWHCashcenterInsert": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel6')]",
+				"[concat(variables('factoryId'), '/datasets/Excel8')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWH_copy1')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH_copy1')]",
+				"[concat(variables('factoryId'), '/dataflows/CashcenterDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupData",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel6",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupData').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "InitialCopyDataflow_copy1_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicColumnDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"source": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"sink": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"parameter1": {
+													"value": "'@{item().col1}'",
+													"type": "Expression"
+												},
+												"parameter2": {
+													"value": "'@{item().col2}'",
+													"type": "Expression"
+												},
+												"parameter3": {
+													"value": "'@{item().col3}'",
+													"type": "Expression"
+												},
+												"parameter4": {
+													"value": "'@{item().col4}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"LocalStaging": {},
+												"SilverLineage": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "removeDuplicateDWH_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "InitialCopyDataflow_copy1_copy1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicDataDuplidaceDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"filename": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"groupby": {
+													"value": "'@{item().groupby}'",
+													"type": "Expression"
+												},
+												"payment": {
+													"value": "'@{item().col5}'",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "'@{item().monthlyPayment\n}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SilverPIPELINE": {},
+												"GoldLineage": {},
+												"sink1": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "ForEachDATA_copy1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel8",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value\n",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "CashcenterDWH",
+											"type": "DataFlowReference",
+											"parameters": {
+												"region": {
+													"value": "'@{item().region}'",
+													"type": "Expression"
+												},
+												"cashcentertype": {
+													"value": "'@{item().cashcentertype}'",
+													"type": "Expression"
+												},
+												"cashcenter": {
+													"value": "'@{item().cashcenter}'",
+													"type": "Expression"
+												},
+												"existCashcentertype": {
+													"value": "'@{item().cashcentertypeid}'",
+													"type": "Expression"
+												},
+												"existRegion": {
+													"value": "'@{item().regionid}'",
+													"type": "Expression"
+												},
+												"existcashcenterID": {
+													"value": "'@{item().cashcenterid}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RegionHash": {},
+												"cashCentertypeHash": {},
+												"cashcenter": {},
+												"sourcecashCenterhashStaging": {},
+												"DWHCashcenterUpdate": {},
+												"DWHCashcenterInsert": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel6')]",
+				"[concat(variables('factoryId'), '/datasets/Excel8')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWH_copy1')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH_copy1')]",
+				"[concat(variables('factoryId'), '/dataflows/CashcenterDWH')]"
 			]
 		},
 		{
@@ -344,14 +985,10 @@
 													"dataflow": {
 														"referenceName": "dataflow2",
 														"type": "DataFlowReference",
-														"parameters": {
-															"file": {
-																"value": "'@{item().name}'",
-																"type": "Expression"
-															}
-														},
+														"parameters": {},
 														"datasetParameters": {
 															"source1": {},
+															"source2": {},
 															"sink1": {}
 														}
 													},
@@ -622,54 +1259,6 @@
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/pipeline2')]",
-			"type": "Microsoft.DataFactory/factories/pipelines",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"activities": [
-					{
-						"name": "Data flow1",
-						"type": "ExecuteDataFlow",
-						"dependsOn": [],
-						"policy": {
-							"timeout": "1.00:00:00",
-							"retry": 0,
-							"retryIntervalInSeconds": 30,
-							"secureOutput": false,
-							"secureInput": false
-						},
-						"userProperties": [],
-						"typeProperties": {
-							"dataflow": {
-								"referenceName": "dataflow3",
-								"type": "DataFlowReference",
-								"parameters": {},
-								"datasetParameters": {
-									"source1": {},
-									"sink1": {},
-									"sink2": {}
-								}
-							},
-							"staging": {},
-							"compute": {
-								"coreCount": 8,
-								"computeType": "General"
-							},
-							"traceLevel": "Fine"
-						}
-					}
-				],
-				"policy": {
-					"elapsedTimeMetric": {},
-					"cancelAfter": {}
-				},
-				"annotations": []
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/dataflows/dataflow3')]"
-			]
-		},
-		{
 			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -771,6 +1360,78 @@
 					"quoteChar": "\""
 				},
 				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText3')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "TANMAY0",
+						"type": "String"
+					},
+					{
+						"name": "Prop_1",
+						"type": "String"
+					},
+					{
+						"name": "TANMAY2",
+						"type": "String"
+					},
+					{
+						"name": "TANMAY3",
+						"type": "String"
+					},
+					{
+						"name": "V0.1",
+						"type": "String"
+					},
+					{
+						"name": "true",
+						"type": "String"
+					},
+					{
+						"name": "9687595126",
+						"type": "String"
+					},
+					{
+						"name": "40049 Clemons Street",
+						"type": "String"
+					},
+					{
+						"name": "01/03/22",
+						"type": "String"
+					},
+					{
+						"name": "31/03/22",
+						"type": "String"
+					},
+					{
+						"name": "1254635",
+						"type": "String"
+					}
+				]
 			},
 			"dependsOn": [
 				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
@@ -1031,6 +1692,186 @@
 			]
 		},
 		{
+			"name": "[concat(parameters('factoryName'), '/Excel6')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "cleanfileSiver.xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "data",
+						"type": "String"
+					},
+					{
+						"name": "col1",
+						"type": "String"
+					},
+					{
+						"name": "col2",
+						"type": "String"
+					},
+					{
+						"name": "col3",
+						"type": "String"
+					},
+					{
+						"name": "col4",
+						"type": "String"
+					},
+					{
+						"name": "col5",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel7')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "test",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": "RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedOn",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedOn",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel8')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dynamicvalidation.xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "cashcenter",
+						"type": "String"
+					},
+					{
+						"name": "cashcentertype",
+						"type": "String"
+					},
+					{
+						"name": "region",
+						"type": "String"
+					},
+					{
+						"name": "cashcentertypeid",
+						"type": "String"
+					},
+					{
+						"name": "regionid",
+						"type": "String"
+					},
+					{
+						"name": "cashcenterid",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
 			"name": "[concat(parameters('factoryName'), '/cashcenter_and_type_region')]",
 			"type": "Microsoft.DataFactory/factories/datasets",
 			"apiVersion": "2018-06-01",
@@ -1172,102 +2013,43 @@
 			"dependsOn": []
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"name": "[concat(parameters('factoryName'), '/CashcenterDWH')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
 				"type": "MappingDataFlow",
 				"typeProperties": {
 					"sources": [
 						{
 							"linkedService": {
-								"referenceName": "AzureDataLakeStorage1",
+								"referenceName": "sqldata",
 								"type": "LinkedServiceReference"
 							},
-							"name": "source1"
-						}
-					],
-					"sinks": [
+							"name": "RegionHash"
+						},
 						{
 							"linkedService": {
-								"referenceName": "AzureDataLakeStorage1",
+								"referenceName": "sqldata",
 								"type": "LinkedServiceReference"
 							},
-							"name": "sink1"
-						}
-					],
-					"transformations": [
+							"name": "cashCentertypeHash"
+						},
 						{
-							"name": "select1"
-						}
-					],
-					"scriptLines": [
-						"source(output(",
-						"          {File header ID} as short,",
-						"          {file header description} as string,",
-						"          {Start date} as string,",
-						"          {End Date } as string,",
-						"          {File item name } as string,",
-						"          {Rows loaded} as short,",
-						"          {Rows rejected error} as boolean,",
-						"          Status as string",
-						"     ),",
-						"     allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     format: 'delimited',",
-						"     fileSystem: 'newdata',",
-						"     fileName: 'anc.csv',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true) ~> source1",
-						"source1 select(mapColumn(",
-						"          {File header ID},",
-						"          {file header description},",
-						"          {Start date},",
-						"          {End Date },",
-						"          {Rows loaded},",
-						"          {Rows rejected error},",
-						"          Status",
-						"     ),",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select1",
-						"select1 sink(allowSchemaDrift: true,",
-						"     validateSchema: false,",
-						"     format: 'delimited',",
-						"     fileSystem: 'newdata',",
-						"     folderPath: 'selectdata',",
-						"     columnDelimiter: ',',",
-						"     escapeChar: '\\\\',",
-						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: false,",
-						"     umask: 0777,",
-						"     preCommands: [],",
-						"     postCommands: [],",
-						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sink1"
-					]
-				}
-			},
-			"dependsOn": [
-				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
-			]
-		},
-		{
-			"name": "[concat(parameters('factoryName'), '/dataflow2')]",
-			"type": "Microsoft.DataFactory/factories/dataflows",
-			"apiVersion": "2018-06-01",
-			"properties": {
-				"type": "MappingDataFlow",
-				"typeProperties": {
-					"sources": [
-						{
-							"dataset": {
-								"referenceName": "cashcenter_and_type_region",
-								"type": "DatasetReference"
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
 							},
-							"name": "source1"
+							"name": "cashcenter"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sourcecashCenterhashStaging"
 						}
 					],
 					"sinks": [
@@ -1276,70 +2058,167 @@
 								"referenceName": "sqldata",
 								"type": "LinkedServiceReference"
 							},
-							"name": "sink1"
+							"name": "DWHCashcenterUpdate"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHCashcenterInsert"
 						}
 					],
 					"transformations": [
 						{
-							"name": "derivedColumn1"
+							"name": "existsCashcenterID"
 						},
 						{
-							"name": "union1"
+							"name": "Update"
+						},
+						{
+							"name": "Insert"
+						},
+						{
+							"name": "NotexistsCashcenterID"
+						},
+						{
+							"name": "ValidateRegion"
+						},
+						{
+							"name": "exists1"
 						}
 					],
 					"scriptLines": [
 						"parameters{",
-						"     file as string",
+						"     region as string,",
+						"     cashcentertype as string,",
+						"     cashcenter as string,",
+						"     existCashcentertype as string,",
+						"     existRegion as string,",
+						"     existcashcenterID as string",
 						"}",
 						"source(output(",
-						"          EmployeeID as string,",
-						"          CashCentreID as string,",
-						"          CashCentreShiftID as string,",
-						"          CashCentreTeamID as string,",
-						"          PayRollNumber as string,",
-						"          FirstName as string,",
-						"          LastName as string,",
-						"          DisplayName as string,",
+						"          RegionID as integer,",
+						"          RegionCode as string,",
+						"          RegionDescription as string,",
 						"          CreatedBy as string,",
-						"          CreatedOn as string,",
+						"          CreatedOn as timestamp,",
 						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
 						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
 						"          RowLockVersion as string,",
-						"          IsActive as string,",
-						"          Mobilenumber as string,",
-						"          {Address } as string,",
-						"          {start date} as string,",
-						"          {end date} as string",
+						"          sha as string,",
+						"          IsActive as boolean",
 						"     ),",
 						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
-						"     ignoreNoFilesFound: false,",
-						"     wildcardPaths:[($file)]) ~> source1",
-						"source1 derive(validate = true()) ~> derivedColumn1",
-						"source1, derivedColumn1 union(byName: true)~> union1",
-						"union1 sink(allowSchemaDrift: true,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $region)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> RegionHash",
+						"source(output(",
+						"          CashCentreTypeID as integer,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'table',",
 						"     store: 'sqlserver',",
-						"     schemaName: 'schema',",
-						"     tableName: ($file),",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $cashcentertype)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> cashCentertypeHash",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'parquet',",
+						"     container: 'dynamicdata',",
+						"     wildcardPaths:[($cashcenter)]) ~> cashcenter",
+						"source(output(",
+						"          CashCentreID as integer,",
+						"          {  CashCentreTypeID} as short,",
+						"          { RegionID} as short,",
+						"          CashCentreCode as integer,",
+						"          CashCentreDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          CashCentreTypeID as short,",
+						"          CashCentreTypeCode as integer,",
+						"          CashCentreTypeDescription as string,",
+						"          sha as string,",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_cashcenter',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> sourcecashCenterhashStaging",
+						"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+						"     negate:false,",
+						"     broadcast: 'auto')~> existsCashcenterID",
+						"existsCashcenterID alterRow(updateIf(true())) ~> Update",
+						"NotexistsCashcenterID alterRow(insertIf(true())) ~> Insert",
+						"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NotexistsCashcenterID",
+						"exists1, RegionHash exists(toString(byName('RegionID','cashcenter')) == toString(byName('RegionID','RegionHash')),",
+						"     negate:false,",
+						"     broadcast: 'auto')~> ValidateRegion",
+						"cashcenter, cashCentertypeHash exists(toString(byName('CashCentreTypeID','cashcenter')) == toString(byName('CashCentreTypeID','cashCentertypeHash')),",
+						"     negate:false,",
+						"     broadcast: 'auto')~> exists1",
+						"Update sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_cashcenter',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['CashCentreID'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHCashcenterUpdate",
+						"Insert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_cashcenter',",
 						"     insertable: true,",
 						"     updateable: false,",
 						"     deletable: false,",
 						"     upsertable: false,",
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
-						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHCashcenterInsert"
 					]
 				}
 			},
 			"dependsOn": [
-				"[concat(variables('factoryId'), '/datasets/cashcenter_and_type_region')]",
-				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]"
 			]
 		},
 		{
-			"name": "[concat(parameters('factoryName'), '/dataflow3')]",
+			"name": "[concat(parameters('factoryName'), '/ConvergencePurview')]",
 			"type": "Microsoft.DataFactory/factories/dataflows",
 			"apiVersion": "2018-06-01",
 			"properties": {
@@ -1354,7 +2233,443 @@
 								"referenceName": "linkedService3",
 								"type": "LinkedServiceReference"
 							},
-							"name": "source1"
+							"name": "RegionSource"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "CashcenterSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText3",
+								"type": "DatasetReference"
+							},
+							"name": "ConvergingData"
+						}
+					],
+					"transformations": [
+						{
+							"name": "joinData"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'regioncsv.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> RegionSource",
+						"source(output(",
+						"          CashCentreID as integer,",
+						"          {  CashCentreTypeID} as short,",
+						"          { RegionID} as short,",
+						"          CashCentreCode as integer,",
+						"          CashCentreDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'cashcentercsv.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> CashcenterSource",
+						"RegionSource, CashcenterSource join(RegionID == { RegionID},",
+						"     joinType:'outer',",
+						"     broadcast: 'auto')~> joinData",
+						"joinData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          TANMAY0 as string,",
+						"          Prop_1 as string,",
+						"          TANMAY2 as string,",
+						"          TANMAY3 as string,",
+						"          {V0.1} as string,",
+						"          true as string,",
+						"          {9687595126} as string,",
+						"          {40049 Clemons Street} as string,",
+						"          {01/03/22} as string,",
+						"          {31/03/22} as string,",
+						"          {1254635} as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ConvergingData"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_cashcentertype_SQL')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH_sqlCashcenter"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "cashcentertypeNEWdata"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHCashcentertype"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHcashcentertypeUpdate"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHcashcentertypeInsert"
+						}
+					],
+					"transformations": [
+						{
+							"name": "generateHASH"
+						},
+						{
+							"name": "dosentexists"
+						},
+						{
+							"name": "insert"
+						},
+						{
+							"name": "NOTexistsCashcentertypeID"
+						},
+						{
+							"name": "update"
+						},
+						{
+							"name": "Generatehash1"
+						},
+						{
+							"name": "existsCashcentertypeID"
+						},
+						{
+							"name": "DerivecolUpdateDeleted"
+						},
+						{
+							"name": "DerivecolInsertDeleted"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CashCentreTypeID as integer,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'CashCentreType',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> cashcentertypeNEWdata",
+						"source(output(",
+						"          CashCentreTypeID as integer,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_CashCentreType',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> DWHCashcentertype",
+						"cashcentertypeNEWdata derive(sha = sha1(CashCentreTypeID,CashCentreTypeCode,CashCentreTypeDescription,IsActive)) ~> generateHASH",
+						"generateHASH, Generatehash1 exists(generateHASH@sha == Generatehash1@sha,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> dosentexists",
+						"DerivecolInsertDeleted alterRow(insertIf(true())) ~> insert",
+						"dosentexists, DWHCashcentertype exists(cashcentertypeNEWdata@CashCentreTypeID == DWHCashcentertype@CashCentreTypeID,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NOTexistsCashcentertypeID",
+						"DerivecolUpdateDeleted alterRow(updateIf(true())) ~> update",
+						"DWHCashcentertype derive(sha = sha1(CashCentreTypeID,CashCentreTypeCode,CashCentreTypeDescription,IsActive)) ~> Generatehash1",
+						"dosentexists, DWHCashcentertype exists(cashcentertypeNEWdata@CashCentreTypeID == DWHCashcentertype@CashCentreTypeID,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> existsCashcentertypeID",
+						"existsCashcentertypeID derive(UpdatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolUpdateDeleted",
+						"NOTexistsCashcentertypeID derive(CreatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolInsertDeleted",
+						"update sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_CashCentreType',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['CashCentreTypeID'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHcashcentertypeUpdate",
+						"insert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_CashCentreType',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHcashcentertypeInsert"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_region_SQL')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH_sqlCashcenter"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sourceRegion"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHRegion"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHUpdateRegion"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHinsertRegion"
+						}
+					],
+					"transformations": [
+						{
+							"name": "generateHASH"
+						},
+						{
+							"name": "dosentexists"
+						},
+						{
+							"name": "insert"
+						},
+						{
+							"name": "NOTexistsRegionID"
+						},
+						{
+							"name": "update"
+						},
+						{
+							"name": "GenerateHash1"
+						},
+						{
+							"name": "existsRegionID"
+						},
+						{
+							"name": "DerivecolUpdateDeleted"
+						},
+						{
+							"name": "DerivecolumnInsertDeleted"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          RegionID as integer,",
+						"          RegionCode as string,",
+						"          RegionDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'Region',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> sourceRegion",
+						"source(output(",
+						"          RegionID as integer,",
+						"          RegionCode as string,",
+						"          RegionDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_region',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> DWHRegion",
+						"sourceRegion derive(sha = sha1(RegionID,RegionCode,RegionDescription,IsActive)) ~> generateHASH",
+						"generateHASH, GenerateHash1 exists(generateHASH@sha == GenerateHash1@sha,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> dosentexists",
+						"DerivecolumnInsertDeleted alterRow(insertIf(true())) ~> insert",
+						"dosentexists, DWHRegion exists(sourceRegion@RegionID == DWHRegion@RegionID,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NOTexistsRegionID",
+						"DerivecolUpdateDeleted alterRow(updateIf(true())) ~> update",
+						"DWHRegion derive(sha = sha1(RegionID,RegionCode,RegionDescription,IsActive)) ~> GenerateHash1",
+						"dosentexists, DWHRegion exists(sourceRegion@RegionID == DWHRegion@RegionID,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> existsRegionID",
+						"existsRegionID derive(UpdatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolUpdateDeleted",
+						"NOTexistsRegionID derive(CreatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolumnInsertDeleted",
+						"update sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_Region',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['RegionID'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHUpdateRegion",
+						"insert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_Region',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHinsertRegion"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Divergence')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "EMPdata"
 						}
 					],
 					"sinks": [
@@ -1363,22 +2678,22 @@
 								"referenceName": "DelimitedText2",
 								"type": "DatasetReference"
 							},
-							"name": "sink1"
+							"name": "EMPDATASPLIT1"
 						},
 						{
 							"dataset": {
 								"referenceName": "DelimitedText1",
 								"type": "DatasetReference"
 							},
-							"name": "sink2"
+							"name": "EMPDATASPLIT2"
 						}
 					],
 					"transformations": [
 						{
-							"name": "select1"
+							"name": "COLselect2"
 						},
 						{
-							"name": "select2"
+							"name": "COLselect"
 						}
 					],
 					"scriptLines": [
@@ -1412,8 +2727,8 @@
 						"     columnDelimiter: ',',",
 						"     escapeChar: '\\\\',",
 						"     quoteChar: '\\\"',",
-						"     columnNamesAsHeader: true) ~> source1",
-						"source1 select(mapColumn(",
+						"     columnNamesAsHeader: true) ~> EMPdata",
+						"EMPdata select(mapColumn(",
 						"          EmployeeID,",
 						"          CashCentreID1,",
 						"          CashCentreShiftID,",
@@ -1422,8 +2737,8 @@
 						"          FirstName",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select1",
-						"source1 select(mapColumn(",
+						"     skipDuplicateMapOutputs: true) ~> COLselect2",
+						"EMPdata select(mapColumn(",
 						"          CreatedBy,",
 						"          CreatedOn,",
 						"          UpdatedBy,",
@@ -1437,15 +2752,15 @@
 						"          CashCentreID18",
 						"     ),",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> select2",
-						"select2 sink(allowSchemaDrift: true,",
+						"     skipDuplicateMapOutputs: true) ~> COLselect",
+						"COLselect sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     umask: 0777,",
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sink1",
-						"select1 sink(allowSchemaDrift: true,",
+						"     skipDuplicateMapOutputs: true) ~> EMPDATASPLIT1",
+						"COLselect2 sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     input(",
 						"          {File header ID} as string,",
@@ -1461,7 +2776,7 @@
 						"     preCommands: [],",
 						"     postCommands: [],",
 						"     skipDuplicateMapInputs: true,",
-						"     skipDuplicateMapOutputs: true) ~> sink2"
+						"     skipDuplicateMapOutputs: true) ~> EMPDATASPLIT2"
 					]
 				}
 			},
@@ -1469,6 +2784,198 @@
 				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]",
 				"[concat(variables('factoryId'), '/datasets/DelimitedText2')]",
 				"[concat(variables('factoryId'), '/datasets/DelimitedText1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "aggregate3"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CashCentreTypeID as short,",
+						"          CashCentreTypeCode as integer,",
+						"          CashCentreTypeDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          pass as string,",
+						"          Month as date 'dd/MM/yyyy',",
+						"          payment as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'excel',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'cashcentertype.xlsx',",
+						"     sheetName: 'Sheet1',",
+						"     firstRowAsHeader: true) ~> source1",
+						"source1 derive(abc = toString(byName('CashCentreTypeID'))) ~> derivedColumn1",
+						"derivedColumn1 aggregate(groupBy(bb = toString(byName('CashCentreTypeID'))),",
+						"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate1",
+						"source1 aggregate(groupBy(Month = month(Month)),",
+						"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate3",
+						"aggregate1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'newdata',",
+						"     folderPath: 'selectdata',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: false,",
+						"     umask: 0777,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "cashcenter_and_type_region",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "union1"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "derivedColumn2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmployeeID as string,",
+						"          CashCentreID as string,",
+						"          CashCentreShiftID as string,",
+						"          CashCentreTeamID as string,",
+						"          PayRollNumber as string,",
+						"          FirstName as string,",
+						"          LastName as string,",
+						"          DisplayName as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as string,",
+						"          UpdatedBy as string,",
+						"          DeletedBy as string,",
+						"          RowLockVersion as string,",
+						"          IsActive as string,",
+						"          Mobilenumber as string,",
+						"          {Address } as string,",
+						"          {start date} as string,",
+						"          {end date} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source(output(",
+						"          CashCentreTypeID as string,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          RowLockVersion as string,",
+						"          IsActive as string,",
+						"          pass as string,",
+						"          Month as string,",
+						"          payment as string,",
+						"          validate as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'silver/cashcentertype.xlsx',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> source2",
+						"source1, source1 union(byName: true)~> union1",
+						"derivedColumn2 aggregate(groupBy(monthtotal = month(toDate(Month))),",
+						"     each(match(name=='payment'), $$ = sum(toInteger($$)))) ~> aggregate1",
+						"source2 derive(aa = (toDate(toInteger(Month)))) ~> derivedColumn2",
+						"union1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'schema',",
+						"     tableName: ($file),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/cashcenter_and_type_region')]",
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
 			]
 		},
 		{
@@ -1512,22 +3019,103 @@
 					],
 					"scriptLines": [
 						"parameters{",
-						"     parameter1 as string,",
-						"     parameter2 as string",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string (''),",
+						"     parameter5 as string ('')",
 						"}",
 						"source(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     ignoreNoFilesFound: false,",
-						"     wildcardPaths:[($parameter1)]) ~> LocalStaging",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
 						"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
-						"DUMMYvalidate derive(each(match(type=='string'&&name!='pass'), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
 						"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
 						"RegexNum sink(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'table',",
 						"     store: 'sqlserver',",
 						"     schemaName: 'dbo',",
-						"     tableName: (concat('silver/',$parameter2)),",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]",
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DUMMYvalidate"
+						},
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
+						"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
 						"     insertable: true,",
 						"     updateable: false,",
 						"     deletable: false,",
@@ -1578,14 +3166,14 @@
 					],
 					"scriptLines": [
 						"parameters{",
-						"     parameter1 as string",
+						"     filename as string",
 						"}",
 						"source(allowSchemaDrift: true,",
 						"     validateSchema: false,",
 						"     format: 'table',",
 						"     store: 'sqlserver',",
 						"     schemaName: 'dbo',",
-						"     tableName: (concat('silver/',$parameter1)),",
+						"     tableName: (concat('silver/',$filename)),",
 						"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
 						"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
 						"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
@@ -1594,7 +3182,7 @@
 						"     format: 'table',",
 						"     store: 'sqlserver',",
 						"     schemaName: 'dbo',",
-						"     tableName: (concat('gold/', $parameter1)),",
+						"     tableName: (concat('gold/', $filename)),",
 						"     insertable: true,",
 						"     updateable: false,",
 						"     deletable: false,",
@@ -1602,6 +3190,125 @@
 						"     skipDuplicateMapInputs: true,",
 						"     skipDuplicateMapOutputs: true,",
 						"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicDataDuplidaceDWH_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverPIPELINE"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GoldLineage"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "REMOVEDUP"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "aggregate2"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     filename as string,",
+						"     groupby as string,",
+						"     payment as string,",
+						"     date as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$filename)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
+						"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
+						"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
+						"SilverPIPELINE aggregate(groupBy(totalPayment = toString(byName($groupby))),",
+						"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate1",
+						"SilverPIPELINE aggregate(groupBy(monthTotal = month(toDate(toString(byName($date))))),",
+						"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate2",
+						"REMOVEDUP sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage",
+						"aggregate1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold_aggregation/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+						"aggregate2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold_dateTotal/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
 					]
 				}
 			},
