@@ -2,13 +2,13 @@
 	"name": "Excel1",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "AzureDataLakeStorage1",
+			"referenceName": "AzureDataLakeStorage2",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Sheet1",
+			"sheetName": "test",
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileSystem": "dynamicdata"
