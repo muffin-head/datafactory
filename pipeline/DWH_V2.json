@@ -180,7 +180,7 @@
 						}
 					},
 					"dataset": {
-						"referenceName": "Excel8",
+						"referenceName": "lookupDynamicData",
 						"type": "DatasetReference"
 					},
 					"firstRowOnly": false

@@ -9,7 +9,7 @@
 			"sources": [
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "SilverPIPELINE"
@@ -18,21 +18,21 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "GoldLineage"
 				},
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "sink1"
 				},
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "sink2"

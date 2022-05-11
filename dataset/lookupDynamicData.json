@@ -1,0 +1,21 @@
+{
+	"name": "lookupDynamicData",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "dynamicvalidation (1).xlsx",
+				"fileSystem": "dynamicdata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": []
+	}
+}
