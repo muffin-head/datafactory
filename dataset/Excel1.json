@@ -8,7 +8,6 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "test",
 			"location": {
 				"type": "AzureBlobFSLocation",
 				"fileSystem": "dynamicdata"
