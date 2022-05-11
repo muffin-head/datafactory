@@ -9,28 +9,28 @@
 			"sources": [
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "RegionHash"
 				},
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "cashCentertypeHash"
 				},
 				{
 					"linkedService": {
-						"referenceName": "linkedService3",
+						"referenceName": "AzureDataLakeStorage2",
 						"type": "LinkedServiceReference"
 					},
 					"name": "cashcenter"
 				},
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "sourcecashCenterhashStaging"
@@ -39,14 +39,14 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "DWHCashcenterUpdate"
 				},
 				{
 					"linkedService": {
-						"referenceName": "sqldata",
+						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
 					"name": "DWHCashcenterInsert"
@@ -127,7 +127,7 @@
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'parquet',",
-				"     container: 'dynamicdata',",
+				"     fileSystem: 'dynamicdata',",
 				"     wildcardPaths:[($cashcenter)]) ~> cashcenter",
 				"source(output(",
 				"          CashCentreID as integer,",
