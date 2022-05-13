@@ -22,6 +22,9 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "SilverLineage"
+				},
+				{
+					"name": "sink1"
 				}
 			],
 			"transformations": [
@@ -38,13 +41,22 @@
 					"name": "split1"
 				},
 				{
-					"name": "derivedColumn1"
-				},
-				{
 					"name": "split2"
 				},
 				{
 					"name": "derivedColumn3"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "filter2"
+				},
+				{
+					"name": "derivedColumn4"
+				},
+				{
+					"name": "derivedColumn5"
 				}
 			],
 			"scriptLines": [
@@ -72,15 +84,18 @@
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
 				"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
 				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
-				"derivedColumn1 derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
-				"RegexSTR split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)",
+				"filter1 derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"derivedColumn5 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)",
 				"",
 				",",
-				"     disjoint: false) ~> split1@(date, nodate)",
-				"derivedColumn3 derive(validate = like( toString(byName($parameter4)),'%@%.com')) ~> derivedColumn1",
+				"     disjoint: true) ~> split1@(date, nodate)",
 				"split1@date split(like( toString(byName($parameter4)),'%@%.com'),",
 				"     disjoint: false) ~> split2@(email, noemail)",
-				"split2@email derive(mobile = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'false()')) ~> derivedColumn3",
+				"split2@email derive(mobile = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid')) ~> derivedColumn3",
+				"derivedColumn3 filter(mobile!='invalid') ~> filter1",
+				"derivedColumn3 filter(mobile=='invalid') ~> filter2",
+				"RegexSTR derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> derivedColumn4",
+				"derivedColumn4 derive(each(match(name=='emailid'), $$ = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> derivedColumn5",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
@@ -93,7 +108,15 @@
 				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+				"split1@nodate sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     store: 'cache',",
+				"     format: 'inline',",
+				"     output: false,",
+				"     saveOrder: 1) ~> sink1"
 			]
 		}
 	}
