@@ -36,6 +36,12 @@
 				},
 				{
 					"name": "split1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "split2"
 				}
 			],
 			"scriptLines": [
@@ -62,12 +68,15 @@
 				"     ignoreNoFilesFound: false,",
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
 				"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
-				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
-				"split1@date derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+				"derivedColumn1 derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
 				"RegexSTR split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)",
 				"",
 				",",
 				"     disjoint: false) ~> split1@(date, nodate)",
+				"split2@email derive(validate = like( toString(byName($parameter4)),'%@%.com')) ~> derivedColumn1",
+				"split1@date split(like( toString(byName($parameter4)),'%@%.com'),",
+				"     disjoint: false) ~> split2@(email, noemail)",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
