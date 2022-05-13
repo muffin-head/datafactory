@@ -33,6 +33,9 @@
 				},
 				{
 					"name": "RegexNum"
+				},
+				{
+					"name": "split1"
 				}
 			],
 			"scriptLines": [
@@ -44,13 +47,27 @@
 				"     parameter3 as string (''),",
 				"     parameter4 as string ('')",
 				"}",
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          RegionID as short,",
+				"          RegionCode as short,",
+				"          RegionDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean,",
+				"          MobileNumber as string,",
+				"          {start date} as date,",
+				"          emailid as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
 				"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
-				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
-				"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+				"split1@date derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"RegexSTR split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)",
+				"",
+				",",
+				"     disjoint: false) ~> split1@(date, nodate)",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
