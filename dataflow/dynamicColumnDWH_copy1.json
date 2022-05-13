@@ -42,6 +42,9 @@
 				},
 				{
 					"name": "split2"
+				},
+				{
+					"name": "derivedColumn3"
 				}
 			],
 			"scriptLines": [
@@ -74,9 +77,10 @@
 				"",
 				",",
 				"     disjoint: false) ~> split1@(date, nodate)",
-				"split2@email derive(validate = like( toString(byName($parameter4)),'%@%.com')) ~> derivedColumn1",
+				"derivedColumn3 derive(validate = like( toString(byName($parameter4)),'%@%.com')) ~> derivedColumn1",
 				"split1@date split(like( toString(byName($parameter4)),'%@%.com'),",
 				"     disjoint: false) ~> split2@(email, noemail)",
+				"split2@email derive(mobile = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'false()')) ~> derivedColumn3",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
