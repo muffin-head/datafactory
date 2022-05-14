@@ -1,5 +1,5 @@
 {
-	"name": "dynamicColumnDWH_copy1",
+	"name": "dynamicColumnDWH_copy2",
 	"properties": {
 		"folder": {
 			"name": "DWH"
@@ -29,13 +29,6 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "sink1"
-				},
-				{
-					"linkedService": {
-						"referenceName": "sqldata",
-						"type": "LinkedServiceReference"
-					},
-					"name": "sink2"
 				}
 			],
 			"transformations": [
@@ -58,10 +51,13 @@
 					"name": "derivedColumn6"
 				},
 				{
-					"name": "split2"
+					"name": "derivedColumn7"
 				},
 				{
-					"name": "derivedColumn7"
+					"name": "filter1"
+				},
+				{
+					"name": "derivedColumn8"
 				}
 			],
 			"scriptLines": [
@@ -74,14 +70,14 @@
 				"     parameter4 as string ('')",
 				"}",
 				"source(output(",
-				"          CashCentreTypeID as short,",
-				"          CashCentreTypeCode as integer,",
-				"          CashCentreTypeDescription as string,",
+				"          RegionID as short,",
+				"          RegionCode as short,",
+				"          RegionDescription as string,",
 				"          RowLockVersion as short,",
 				"          IsActive as boolean,",
-				"          pass as string,",
+				"          MobileNumber as string,",
 				"          {start date} as date,",
-				"          {end date} as string",
+				"          emailid as string",
 				"     ),",
 				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
@@ -89,14 +85,15 @@
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
 				"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
 				"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
-				"email split(case(type(toDate(toString(byName($parameter3))))=='date', between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)),",
-				"     disjoint: false) ~> split1@(date, invalid)",
+				"filter1 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+				"     disjoint: true) ~> split1@(date, nodate)",
 				"RegexSTR derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
 				"mobile derive(each(match(name=='emailid'), $$ = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
-				"split2@error derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
-				"split1@invalid split($parameter3=='start date',",
-				"     disjoint: false) ~> split2@(error, validate)",
-				"split2@validate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
+				"split1@nodate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
+				"derivedColumn8 derive(date = between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)) ~> derivedColumn7",
+				"derivedColumn7 filter(date==true()) ~> filter1",
+				"email derive(each(match(type=='date'), $$ = between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)),",
+				"          date = case(type($parameter3)=='date', between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),false())) ~> derivedColumn8",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
@@ -123,20 +120,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     saveOrder: 1,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
-				"derivedColumn7 sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     format: 'table',",
-				"     store: 'sqlserver',",
-				"     schemaName: '',",
-				"     tableName: '',",
-				"     insertable: true,",
-				"     updateable: false,",
-				"     deletable: false,",
-				"     upsertable: false,",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}
