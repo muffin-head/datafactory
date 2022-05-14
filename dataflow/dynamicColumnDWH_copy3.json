@@ -1,5 +1,5 @@
 {
-	"name": "dynamicColumnDWH_copy1",
+	"name": "dynamicColumnDWH_copy3",
 	"properties": {
 		"folder": {
 			"name": "DWH"
@@ -55,10 +55,16 @@
 					"name": "email"
 				},
 				{
+					"name": "derivedColumn6"
+				},
+				{
 					"name": "split2"
 				},
 				{
 					"name": "derivedColumn7"
+				},
+				{
+					"name": "filter1"
 				},
 				{
 					"name": "derivedColumn8"
@@ -89,14 +95,16 @@
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
 				"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
 				"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
-				"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
-				"     disjoint: false) ~> split1@(date, invalid)",
+				"filter1 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+				"     disjoint: true) ~> split1@(date, invalid)",
 				"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
 				"mobile derive(each(match(name=='emailid'), 'validated email' = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
+				"split2@error derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
 				"split1@invalid split($parameter3=='start date',",
 				"     disjoint: false) ~> split2@(error, validate)",
 				"split2@validate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
-				"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+				"email filter({validated email}!='invalid') ~> filter1",
+				"RegexSTR derive(each(match(type=='short'||type=='integer'&&name==$parameter1||name==$parameter2||name==$parameter4), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
@@ -110,7 +118,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
-				"split2@error sink(allowSchemaDrift: true,",
+				"derivedColumn6 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
