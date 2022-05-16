@@ -28,13 +28,6 @@
 						"referenceName": "linkedService4",
 						"type": "LinkedServiceReference"
 					},
-					"name": "sink1"
-				},
-				{
-					"linkedService": {
-						"referenceName": "linkedService4",
-						"type": "LinkedServiceReference"
-					},
 					"name": "sink2"
 				}
 			],
@@ -65,6 +58,12 @@
 				},
 				{
 					"name": "derivedColumn9"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "alterRow2"
 				}
 			],
 			"scriptLines": [
@@ -95,7 +94,9 @@
 				"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
 				"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
 				"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
-				"RegexNum sink(allowSchemaDrift: true,",
+				"RegexNum alterRow(upsertIf(true())) ~> alterRow1",
+				"derivedColumn7 alterRow(upsertIf(true())) ~> alterRow2",
+				"alterRow1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
@@ -108,21 +109,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
-				"split2@error sink(allowSchemaDrift: true,",
-				"     validateSchema: false,",
-				"     format: 'table',",
-				"     store: 'sqlserver',",
-				"     schemaName: 'dbo',",
-				"     tableName: 'silver_error',",
-				"     insertable: true,",
-				"     updateable: false,",
-				"     deletable: false,",
-				"     upsertable: false,",
-				"     skipDuplicateMapInputs: true,",
-				"     skipDuplicateMapOutputs: true,",
-				"     saveOrder: 0,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
-				"derivedColumn7 sink(allowSchemaDrift: true,",
+				"alterRow2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
@@ -131,7 +118,8 @@
 				"     insertable: true,",
 				"     updateable: false,",
 				"     deletable: false,",
-				"     upsertable: false,",
+				"     upsertable: true,",
+				"     keys:['VALIDATE'],",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
