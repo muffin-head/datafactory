@@ -102,7 +102,7 @@
 				"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
 				"     disjoint: false) ~> split1@(date, validate)",
 				"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
-				"mobile derive(each(match(name=='emailid'), 'validated email' = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
+				"mobile derive(each(match(name=='emailid'), 'validated email' = case(like(toString(byName($parameter4)),'%@%.com'),$$))) ~> email",
 				"split1@validate split($parameter3=='start date',",
 				"     disjoint: false) ~> split2@(error, OtherData)",
 				"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
