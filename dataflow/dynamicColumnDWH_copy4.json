@@ -1,0 +1,71 @@
+{
+	"name": "dynamicColumnDWH_copy4",
+	"properties": {
+		"folder": {
+			"name": "DWH"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"dataset": {
+						"referenceName": "Excel1",
+						"type": "DatasetReference"
+					},
+					"name": "LocalStaging"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "sqldata",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SilverLineage"
+				}
+			],
+			"transformations": [
+				{
+					"name": "DUMMYvalidate"
+				},
+				{
+					"name": "RegexSTR"
+				},
+				{
+					"name": "RegexNum"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     source as string,",
+				"     sink as string,",
+				"     parameter1 as string (''),",
+				"     parameter2 as string (''),",
+				"     parameter3 as string (''),",
+				"     parameter4 as string (''),",
+				"     parameter5 as string ('')",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     wildcardPaths:[($source)]) ~> LocalStaging",
+				"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
+				"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+				"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"RegexNum sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$sink)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+			]
+		}
+	}
+}

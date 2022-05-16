@@ -8,9 +8,9 @@
 		"typeProperties": {
 			"sources": [
 				{
-					"dataset": {
-						"referenceName": "Excel1",
-						"type": "DatasetReference"
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage2",
+						"type": "LinkedServiceReference"
 					},
 					"name": "LocalStaging"
 				}
@@ -62,6 +62,9 @@
 				},
 				{
 					"name": "derivedColumn8"
+				},
+				{
+					"name": "derivedColumn9"
 				}
 			],
 			"scriptLines": [
@@ -73,31 +76,15 @@
 				"     parameter3 as string (''),",
 				"     parameter4 as string ('')",
 				"}",
-				"source(output(",
-				"          EmployeeID as string,",
-				"          CashCentreID as string,",
-				"          CashCentreShiftID as string,",
-				"          CashCentreTeamID as string,",
-				"          PayRollNumber as string,",
-				"          FirstName as string,",
-				"          LastName as string,",
-				"          DisplayName as string,",
-				"          CreatedBy as string,",
-				"          CreatedOn as string,",
-				"          UpdatedBy as string,",
-				"          DeletedBy as string,",
-				"          RowLockVersion as string,",
-				"          IsActive as string,",
-				"          Mobilenumber as string,",
-				"          {Address } as string,",
-				"          {start date} as string,",
-				"          {end date} as string",
-				"     ),",
-				"     allowSchemaDrift: true,",
+				"source(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
+				"     format: 'excel',",
+				"     fileSystem: 'dynamicdata',",
+				"     sheetName: 'Sheet1',",
+				"     firstRowAsHeader: true,",
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
-				"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+				"derivedColumn9 derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
 				"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
 				"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
 				"     disjoint: false) ~> split1@(date, validate)",
@@ -107,6 +94,7 @@
 				"     disjoint: false) ~> split2@(error, OtherData)",
 				"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
 				"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+				"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
 				"RegexNum sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",

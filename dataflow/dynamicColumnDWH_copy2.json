@@ -2,7 +2,7 @@
 	"name": "dynamicColumnDWH_copy2",
 	"properties": {
 		"folder": {
-			"name": "DWH"
+			"name": "test"
 		},
 		"type": "MappingDataFlow",
 		"typeProperties": {
