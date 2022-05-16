@@ -1,0 +1,73 @@
+{
+	"name": "Excel9",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage2",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileSystem": "dynamicdata"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "CashCentreID",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreTypeID",
+				"type": "String"
+			},
+			{
+				"name": "RegionID",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreCode",
+				"type": "String"
+			},
+			{
+				"name": "CashCentreDescription",
+				"type": "String"
+			},
+			{
+				"name": "CreatedBy",
+				"type": "String"
+			},
+			{
+				"name": "CreatedOn",
+				"type": "String"
+			},
+			{
+				"name": "UpdatedBy",
+				"type": "String"
+			},
+			{
+				"name": "UpdatedOn",
+				"type": "String"
+			},
+			{
+				"name": "DeletedBy",
+				"type": "String"
+			},
+			{
+				"name": "DeletedOn",
+				"type": "String"
+			},
+			{
+				"name": "RowLockVersion",
+				"type": "String"
+			},
+			{
+				"name": "IsActive",
+				"type": "String"
+			}
+		]
+	}
+}
