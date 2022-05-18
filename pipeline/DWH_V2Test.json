@@ -63,7 +63,7 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "dynamicColumnDWH_copy1",
+									"referenceName": "dynamicColumnDWHWorking",
 									"type": "DataFlowReference",
 									"parameters": {
 										"source": {
