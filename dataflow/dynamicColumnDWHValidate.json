@@ -33,37 +33,13 @@
 			],
 			"transformations": [
 				{
-					"name": "RegexSTR"
-				},
-				{
-					"name": "RegexNum"
+					"name": "derivedColumn9"
 				},
 				{
 					"name": "split1"
 				},
 				{
-					"name": "mobile"
-				},
-				{
-					"name": "email"
-				},
-				{
-					"name": "split2"
-				},
-				{
-					"name": "derivedColumn7"
-				},
-				{
-					"name": "derivedColumn8"
-				},
-				{
-					"name": "derivedColumn9"
-				},
-				{
-					"name": "alterRow1"
-				},
-				{
-					"name": "alterRow2"
+					"name": "assert2"
 				}
 			],
 			"scriptLines": [
@@ -75,7 +51,17 @@
 				"     parameter3 as string (''),",
 				"     parameter4 as string ('')",
 				"}",
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          RegionID as short,",
+				"          RegionCode as short,",
+				"          RegionDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean,",
+				"          MobileNumber as string,",
+				"          {start date} as date,",
+				"          emailid as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'excel',",
@@ -83,20 +69,11 @@
 				"     sheetName: 'Sheet1',",
 				"     firstRowAsHeader: true,",
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
-				"derivedColumn9 derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
-				"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
-				"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
-				"     disjoint: false) ~> split1@(date, validate)",
-				"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
-				"mobile derive(each(match(name=='emailid'), 'validated email' = case(like(toString(byName($parameter4)),'%@%.com'),$$))) ~> email",
-				"split1@validate split($parameter3=='start date',",
-				"     disjoint: false) ~> split2@(error, OtherData)",
-				"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
-				"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
 				"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
-				"RegexNum alterRow(upsertIf(true())) ~> alterRow1",
-				"derivedColumn7 alterRow(upsertIf(true())) ~> alterRow2",
-				"alterRow1 sink(allowSchemaDrift: true,",
+				"derivedColumn9 split(case((type($parameter3))==type('date'), true()),",
+				"     disjoint: false) ~> split1@(hasdate, dnthave)",
+				"split1@hasdate assert(expectTrue(between(toDate(toString(byName('start date'))),currentDate()-9125,currentDate()+15), false, 'assert1')) ~> assert2",
+				"assert2 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
@@ -109,7 +86,7 @@
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
 				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
-				"alterRow2 sink(allowSchemaDrift: true,",
+				"split2@OtherData sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
