@@ -1,0 +1,129 @@
+{
+	"name": "dynamicColumnDWHValidate",
+	"properties": {
+		"folder": {
+			"name": "DWH"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage2",
+						"type": "LinkedServiceReference"
+					},
+					"name": "LocalStaging"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "linkedService4",
+						"type": "LinkedServiceReference"
+					},
+					"name": "SilverLineage"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService4",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "RegexSTR"
+				},
+				{
+					"name": "RegexNum"
+				},
+				{
+					"name": "split1"
+				},
+				{
+					"name": "mobile"
+				},
+				{
+					"name": "email"
+				},
+				{
+					"name": "split2"
+				},
+				{
+					"name": "derivedColumn7"
+				},
+				{
+					"name": "derivedColumn8"
+				},
+				{
+					"name": "derivedColumn9"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "alterRow2"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     source as string,",
+				"     sink as string,",
+				"     parameter1 as string (''),",
+				"     parameter2 as string (''),",
+				"     parameter3 as string (''),",
+				"     parameter4 as string ('')",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'excel',",
+				"     fileSystem: 'dynamicdata',",
+				"     sheetName: 'Sheet1',",
+				"     firstRowAsHeader: true,",
+				"     wildcardPaths:[($source)]) ~> LocalStaging",
+				"derivedColumn9 derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+				"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+				"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+				"     disjoint: false) ~> split1@(date, validate)",
+				"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+				"mobile derive(each(match(name=='emailid'), 'validated email' = case(like(toString(byName($parameter4)),'%@%.com'),$$))) ~> email",
+				"split1@validate split($parameter3=='start date',",
+				"     disjoint: false) ~> split2@(error, OtherData)",
+				"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
+				"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+				"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
+				"RegexNum alterRow(upsertIf(true())) ~> alterRow1",
+				"derivedColumn7 alterRow(upsertIf(true())) ~> alterRow2",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$sink)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$sink)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['VALIDATE'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+			]
+		}
+	}
+}
