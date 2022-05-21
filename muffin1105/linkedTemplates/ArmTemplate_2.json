@@ -1,0 +1,966 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "muffin1105"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DUMMYvalidate"
+						},
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string (''),",
+						"     parameter5 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
+						"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						},
+						{
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "mobile"
+						},
+						{
+							"name": "email"
+						},
+						{
+							"name": "derivedColumn6"
+						},
+						{
+							"name": "derivedColumn7"
+						},
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "derivedColumn8"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          MobileNumber as string,",
+						"          {start date} as date,",
+						"          emailid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"filter1 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+						"     disjoint: true) ~> split1@(date, nodate)",
+						"RegexSTR derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+						"mobile derive(each(match(name=='emailid'), $$ = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
+						"split1@nodate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
+						"derivedColumn8 derive(date = between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)) ~> derivedColumn7",
+						"derivedColumn7 filter(date==true()) ~> filter1",
+						"email derive(each(match(type=='date'), $$ = between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)),",
+						"          date = case(type($parameter3)=='date', between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),false())) ~> derivedColumn8",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+						"derivedColumn6 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy3')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						},
+						{
+							"name": "sink1"
+						},
+						{
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "mobile"
+						},
+						{
+							"name": "email"
+						},
+						{
+							"name": "derivedColumn6"
+						},
+						{
+							"name": "split2"
+						},
+						{
+							"name": "derivedColumn7"
+						},
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "derivedColumn8"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          MobileNumber as string,",
+						"          {start date} as date,",
+						"          emailid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"filter1 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+						"     disjoint: true) ~> split1@(date, invalid)",
+						"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+						"mobile derive(each(match(name=='emailid'), 'validated email' = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
+						"split2@error derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
+						"split1@invalid split($parameter3=='start date',",
+						"     disjoint: false) ~> split2@(error, validate)",
+						"split2@validate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
+						"email filter({validated email}!='invalid') ~> filter1",
+						"RegexSTR derive(each(match(type=='short'||type=='integer'&&name==$parameter1||name==$parameter2||name==$parameter4), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+						"derivedColumn6 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink1",
+						"derivedColumn7 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink2"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy4')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DUMMYvalidate"
+						},
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string (''),",
+						"     parameter5 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
+						"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+					]
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/metadataChecker')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Sample metadata checker rules",
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage2",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable1",
+								"type": "DatasetReference"
+							},
+							"name": "DBSource"
+						}
+					],
+					"sinks": [
+						{
+							"name": "WriteResults"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ConditionalSplit1"
+						},
+						{
+							"name": "ConditionalSplit2"
+						},
+						{
+							"name": "BuildModel"
+						},
+						{
+							"name": "GroupBadSources"
+						},
+						{
+							"name": "GroupGoodSources"
+						},
+						{
+							"name": "LabelSource"
+						},
+						{
+							"name": "LabelSource2"
+						},
+						{
+							"name": "SetAsBad"
+						},
+						{
+							"name": "SetAsGood"
+						},
+						{
+							"name": "GroupAll"
+						}
+					],
+					"script": "parameters{\n\tfilename as string ('moviesDB.csv'),\n\tcolumns as string ('movie,title'),\n\tdbname as string ('products')\n}\nsource(output(\n\t\tmovie as integer,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as short,\n\t\tRating as short,\n\t\tRottenTomato as short\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 1,\n\tignoreNoFilesFound: false,\n\tformat: 'delimited',\n\tfileSystem: 'dynamicdata',\n\tcolumnDelimiter: ',',\n\tescapeChar: '\\\\',\n\tquoteChar: '\\\"',\n\tcolumnNamesAsHeader: true,\n\twildcardPaths:[($filename)]) ~> source1\nsource(output(\n\t\tmovie as integer,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as integer,\n\t\tRating as integer,\n\t\tRottenTomato as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 1,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DBSource\nLabelSource2 split(isNull(byName('ProductID')),\n\tdisjoint: false) ~> ConditionalSplit1@(badSchema, goodSchema)\nLabelSource split(isNull(columnNames()[8]),\n\tdisjoint: false) ~> ConditionalSplit2@(badColCount, goodColCount)\nConditionalSplit2@goodColCount derive(MovieID = toInteger(byName('movie')),\n\t\tMovieTitle = byName('title'),\n\t\tMovieYearReleased = toInteger(byName('year')),\n\t\tMovieRating = toInteger(byName('Rating')),\n\t\tMovieGenres = split(toString(byName('genres')),'|')) ~> BuildModel\nConditionalSplit2@badColCount, ConditionalSplit1@badSchema union(byName: true)~> GroupBadSources\nBuildModel, ConditionalSplit1@goodSchema union(byName: true)~> GroupGoodSources\nsource1 derive(sourcename = $filename,\n\t\truleName = 'Column Count') ~> LabelSource\nDBSource derive(sourcename = $dbname,\n\t\truleName = 'ID Check') ~> LabelSource2\nGroupBadSources derive(results = 'bad') ~> SetAsBad\nGroupGoodSources derive(results = 'good') ~> SetAsGood\nSetAsBad, SetAsGood union(byName: true)~> GroupAll\nGroupAll sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['metachecker.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tstore: 'cache',\n\tformat: 'inline',\n\toutput: false,\n\tsaveOrder: 1,\n\tmapColumn(\n\t\tsourcename,\n\t\truleName,\n\t\tresults\n\t),\n\tpartitionBy('hash', 1)) ~> WriteResults"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ReadInputFileDynamically",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Excel4",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "ForEachDATA",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ReadInputFileDynamically",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ReadInputFileDynamically').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(string(item().name),string(pipeline().parameters.file))",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Fail1",
+												"type": "Fail",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"message": "401",
+													"errorCode": "404"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "InitialCopyDataflow_copy1",
+												"type": "ExecuteDataFlow",
+												"dependsOn": [
+													{
+														"activity": "Lookup1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "1.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"dataflow": {
+														"referenceName": "dynamicColumnDWH",
+														"type": "DataFlowReference",
+														"parameters": {
+															"source": {
+																"value": "'@{item().name}'",
+																"type": "Expression"
+															},
+															"sink": {
+																"value": "'@{item().name}'",
+																"type": "Expression"
+															},
+															"parameter1": {
+																"value": "'@{pipeline().parameters.COLclean1}'",
+																"type": "Expression"
+															},
+															"parameter2": {
+																"value": "'@{pipeline().parameters.COLclean2}'",
+																"type": "Expression"
+															},
+															"parameter3": {
+																"value": "'@{pipeline().parameters.COLclean3}'",
+																"type": "Expression"
+															},
+															"parameter4": {
+																"value": "'@{pipeline().parameters.COLclean4}'",
+																"type": "Expression"
+															},
+															"parameter5": {
+																"value": "'@{pipeline().parameters.COLclean5}'",
+																"type": "Expression"
+															}
+														},
+														"datasetParameters": {
+															"LocalStaging": {},
+															"SilverLineage": {}
+														}
+													},
+													"staging": {},
+													"compute": {
+														"coreCount": 8,
+														"computeType": "General"
+													},
+													"traceLevel": "Fine"
+												}
+											},
+											{
+												"name": "Lookup1",
+												"type": "Lookup",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "ExcelSource",
+														"storeSettings": {
+															"type": "AzureBlobStorageReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														}
+													},
+													"dataset": {
+														"referenceName": "Excel5",
+														"type": "DatasetReference",
+														"parameters": {}
+													},
+													"firstRowOnly": false
+												}
+											},
+											{
+												"name": "removeDuplicateDWH",
+												"type": "ExecuteDataFlow",
+												"dependsOn": [
+													{
+														"activity": "InitialCopyDataflow_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "1.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"dataflow": {
+														"referenceName": "dynamicDataDuplidaceDWH",
+														"type": "DataFlowReference",
+														"parameters": {
+															"filename": {
+																"value": "'@{item().name}'",
+																"type": "Expression"
+															}
+														},
+														"datasetParameters": {
+															"SilverPIPELINE": {},
+															"GoldLineage": {}
+														}
+													},
+													"staging": {},
+													"compute": {
+														"coreCount": 8,
+														"computeType": "General"
+													},
+													"traceLevel": "Fine"
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"file": {
+						"type": "string"
+					},
+					"COLclean1": {
+						"type": "string"
+					},
+					"COLclean2": {
+						"type": "string"
+					},
+					"COLclean3": {
+						"type": "string"
+					},
+					"COLclean4": {
+						"type": "string"
+					},
+					"COLclean5": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamic data')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@startswith(toLower(string(item().name)),'cashcenter01.xlsx' )",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Fail1",
+												"type": "Fail",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"message": {
+														"value": "@item.name",
+														"type": "Expression"
+													},
+													"errorCode": " @item.name"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "Data flow1",
+												"type": "ExecuteDataFlow",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "1.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"dataflow": {
+														"referenceName": "dataflow2",
+														"type": "DataFlowReference",
+														"parameters": {},
+														"datasetParameters": {
+															"source1": {},
+															"source2": {},
+															"sink1": {}
+														}
+													},
+													"staging": {},
+													"compute": {
+														"coreCount": 8,
+														"computeType": "General"
+													},
+													"traceLevel": "Fine"
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "If Condition1_copy1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@startswith(string(activity('Get Metadata1').output.name[0]),'cashcenter01.xlsx' )",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Fail1_copy1",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": {
+											"value": "@item.name",
+											"type": "Expression"
+										},
+										"errorCode": " @item.name"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"sourcename": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/metadatapipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Sample metadata checker rules",
+				"activities": [
+					{
+						"name": "metadataChecker",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "metadataChecker",
+								"type": "DataFlowReference",
+								"parameters": {
+									"filename": "'dynamicdata/moviesDB.csv'",
+									"columns": "'movie,title'",
+									"dbname": "'products'"
+								},
+								"datasetParameters": {
+									"source1": {},
+									"DBSource": {},
+									"WriteResults": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"filename": {
+						"type": "string",
+						"defaultValue": "'SampleData/moviesDB.csv'"
+					}
+				},
+				"variables": {
+					"metacheck": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/metadataChecker')]"
+			]
+		}
+	]
+}

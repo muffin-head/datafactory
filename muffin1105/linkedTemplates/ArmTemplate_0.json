@@ -1,0 +1,1016 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "muffin1105"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AzureDataLakeStorage2_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage2'"
+		},
+		"linkedService3_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService3'"
+		},
+		"linkedService4_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService4'"
+		},
+		"sqldata_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqldata'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalake2804.dfs.core.windows.net"
+		},
+		"AzureDataLakeStorage2_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalake0511.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage2')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage2_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage2_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedService3')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedService3_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedService4')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedService4_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sqldata')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('sqldata_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedService4",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "products"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "sch.csv",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "File header ID",
+						"type": "String"
+					},
+					{
+						"name": "file header description",
+						"type": "String"
+					},
+					{
+						"name": "Start date",
+						"type": "String"
+					},
+					{
+						"name": "End Date ",
+						"type": "String"
+					},
+					{
+						"name": "File item name ",
+						"type": "String"
+					},
+					{
+						"name": "Rows loaded",
+						"type": "String"
+					},
+					{
+						"name": "Rows rejected error",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "anc.csv",
+						"fileSystem": "newdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText3')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "TANMAY0",
+						"type": "String"
+					},
+					{
+						"name": "Prop_1",
+						"type": "String"
+					},
+					{
+						"name": "TANMAY2",
+						"type": "String"
+					},
+					{
+						"name": "TANMAY3",
+						"type": "String"
+					},
+					{
+						"name": "V0.1",
+						"type": "String"
+					},
+					{
+						"name": "true",
+						"type": "String"
+					},
+					{
+						"name": "9687595126",
+						"type": "String"
+					},
+					{
+						"name": "40049 Clemons Street",
+						"type": "String"
+					},
+					{
+						"name": "01/03/22",
+						"type": "String"
+					},
+					{
+						"name": "31/03/22",
+						"type": "String"
+					},
+					{
+						"name": "1254635",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText4')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "movie",
+						"type": "String"
+					},
+					{
+						"name": "title",
+						"type": "String"
+					},
+					{
+						"name": "genres",
+						"type": "String"
+					},
+					{
+						"name": "year",
+						"type": "String"
+					},
+					{
+						"name": "Rating",
+						"type": "String"
+					},
+					{
+						"name": "RottenTomato",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreShiftID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTeamID",
+						"type": "String"
+					},
+					{
+						"name": "PayRollNumber",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "DisplayName",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					},
+					{
+						"name": "Mobilenumber",
+						"type": "String"
+					},
+					{
+						"name": "Address ",
+						"type": "String"
+					},
+					{
+						"name": "start date",
+						"type": "String"
+					},
+					{
+						"name": "end date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel4')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedService3",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreShiftID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTeamID",
+						"type": "String"
+					},
+					{
+						"name": "PayRollNumber",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "DisplayName",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					},
+					{
+						"name": "Mobilenumber",
+						"type": "String"
+					},
+					{
+						"name": "Address ",
+						"type": "String"
+					},
+					{
+						"name": "joined date",
+						"type": "String"
+					},
+					{
+						"name": "end date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel5')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedService3",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@item().name",
+							"type": "Expression"
+						},
+						"container": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "  CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": " RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel6')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "cleanfileSiver.xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "data",
+						"type": "String"
+					},
+					{
+						"name": "col1",
+						"type": "String"
+					},
+					{
+						"name": "col2",
+						"type": "String"
+					},
+					{
+						"name": "col3",
+						"type": "String"
+					},
+					{
+						"name": "col4",
+						"type": "String"
+					},
+					{
+						"name": "col5",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel7')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "test",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": "RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedOn",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedOn",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel8')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dynamicvalidation.xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "cashcenter",
+						"type": "String"
+					},
+					{
+						"name": "cashcentertype",
+						"type": "String"
+					},
+					{
+						"name": "region",
+						"type": "String"
+					},
+					{
+						"name": "cashcentertypeid",
+						"type": "String"
+					},
+					{
+						"name": "regionid",
+						"type": "String"
+					},
+					{
+						"name": "cashcenterid",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel9')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": "RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedOn",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedOn",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/cashcenter_and_type_region')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreShiftID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTeamID",
+						"type": "String"
+					},
+					{
+						"name": "PayRollNumber",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "DisplayName",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					},
+					{
+						"name": "Mobilenumber",
+						"type": "String"
+					},
+					{
+						"name": "Address ",
+						"type": "String"
+					},
+					{
+						"name": "start date",
+						"type": "String"
+					},
+					{
+						"name": "end date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/folderout')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "output/demoout1",
+						"fileSystem": "mycontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/genericfolder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		}
+	]
+}

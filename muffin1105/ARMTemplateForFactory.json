@@ -1,0 +1,4794 @@
+{
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"factoryName": {
+			"type": "string",
+			"metadata": "Data Factory name",
+			"defaultValue": "muffin1105"
+		},
+		"AzureDataLakeStorage1_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage1'"
+		},
+		"AzureDataLakeStorage2_accountKey": {
+			"type": "secureString",
+			"metadata": "Secure string for 'accountKey' of 'AzureDataLakeStorage2'"
+		},
+		"linkedService3_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService3'"
+		},
+		"linkedService4_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'linkedService4'"
+		},
+		"sqldata_connectionString": {
+			"type": "secureString",
+			"metadata": "Secure string for 'connectionString' of 'sqldata'"
+		},
+		"AzureDataLakeStorage1_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalake2804.dfs.core.windows.net"
+		},
+		"AzureDataLakeStorage2_properties_typeProperties_url": {
+			"type": "string",
+			"defaultValue": "https://datalake0511.dfs.core.windows.net"
+		}
+	},
+	"variables": {
+		"factoryId": "[concat('Microsoft.DataFactory/factories/', parameters('factoryName'))]"
+	},
+	"resources": [
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "ReadInputFileDynamically",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Excel4",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobStorageReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "ForEachDATA",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "ReadInputFileDynamically",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('ReadInputFileDynamically').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@equals(string(item().name),string(pipeline().parameters.file))",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Fail1",
+												"type": "Fail",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"message": "401",
+													"errorCode": "404"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "InitialCopyDataflow_copy1",
+												"type": "ExecuteDataFlow",
+												"dependsOn": [
+													{
+														"activity": "Lookup1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "1.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"dataflow": {
+														"referenceName": "dynamicColumnDWH",
+														"type": "DataFlowReference",
+														"parameters": {
+															"source": {
+																"value": "'@{item().name}'",
+																"type": "Expression"
+															},
+															"sink": {
+																"value": "'@{item().name}'",
+																"type": "Expression"
+															},
+															"parameter1": {
+																"value": "'@{pipeline().parameters.COLclean1}'",
+																"type": "Expression"
+															},
+															"parameter2": {
+																"value": "'@{pipeline().parameters.COLclean2}'",
+																"type": "Expression"
+															},
+															"parameter3": {
+																"value": "'@{pipeline().parameters.COLclean3}'",
+																"type": "Expression"
+															},
+															"parameter4": {
+																"value": "'@{pipeline().parameters.COLclean4}'",
+																"type": "Expression"
+															},
+															"parameter5": {
+																"value": "'@{pipeline().parameters.COLclean5}'",
+																"type": "Expression"
+															}
+														},
+														"datasetParameters": {
+															"LocalStaging": {},
+															"SilverLineage": {}
+														}
+													},
+													"staging": {},
+													"compute": {
+														"coreCount": 8,
+														"computeType": "General"
+													},
+													"traceLevel": "Fine"
+												}
+											},
+											{
+												"name": "Lookup1",
+												"type": "Lookup",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "7.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"source": {
+														"type": "ExcelSource",
+														"storeSettings": {
+															"type": "AzureBlobStorageReadSettings",
+															"recursive": true,
+															"enablePartitionDiscovery": false
+														}
+													},
+													"dataset": {
+														"referenceName": "Excel5",
+														"type": "DatasetReference",
+														"parameters": {}
+													},
+													"firstRowOnly": false
+												}
+											},
+											{
+												"name": "removeDuplicateDWH",
+												"type": "ExecuteDataFlow",
+												"dependsOn": [
+													{
+														"activity": "InitialCopyDataflow_copy1",
+														"dependencyConditions": [
+															"Succeeded"
+														]
+													}
+												],
+												"policy": {
+													"timeout": "1.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"dataflow": {
+														"referenceName": "dynamicDataDuplidaceDWH",
+														"type": "DataFlowReference",
+														"parameters": {
+															"filename": {
+																"value": "'@{item().name}'",
+																"type": "Expression"
+															}
+														},
+														"datasetParameters": {
+															"SilverPIPELINE": {},
+															"GoldLineage": {}
+														}
+													},
+													"staging": {},
+													"compute": {
+														"coreCount": 8,
+														"computeType": "General"
+													},
+													"traceLevel": "Fine"
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"file": {
+						"type": "string"
+					},
+					"COLclean1": {
+						"type": "string"
+					},
+					"COLclean2": {
+						"type": "string"
+					},
+					"COLclean3": {
+						"type": "string"
+					},
+					"COLclean4": {
+						"type": "string"
+					},
+					"COLclean5": {
+						"type": "string"
+					}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel4')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWH')]",
+				"[concat(variables('factoryId'), '/datasets/Excel5')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V2')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupData",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel6",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupData').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "InitialCopyDataflow_copy1_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicColumnDWHWorking",
+											"type": "DataFlowReference",
+											"parameters": {
+												"source": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"sink": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"parameter1": {
+													"value": "'@{item().col1}'",
+													"type": "Expression"
+												},
+												"parameter2": {
+													"value": "'@{item().col2}'",
+													"type": "Expression"
+												},
+												"parameter3": {
+													"value": "'@{item().col3}'",
+													"type": "Expression"
+												},
+												"parameter4": {
+													"value": "'@{item().col4}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"LocalStaging": {},
+												"SilverLineage": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "removeDuplicateDWH_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "InitialCopyDataflow_copy1_copy1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicDataDuplidaceDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"filename": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"groupby": {
+													"value": "'@{item().groupby}'",
+													"type": "Expression"
+												},
+												"payment": {
+													"value": "'@{item().col5}'",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "'@{item().monthlyPayment\n}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SilverPIPELINE": {},
+												"GoldLineage": {},
+												"sink1": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "ForEachDATA_copy1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "lookupDynamicData",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value\n",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "CashcenterDWH",
+											"type": "DataFlowReference",
+											"parameters": {
+												"region": {
+													"value": "'@{item().region}'",
+													"type": "Expression"
+												},
+												"cashcentertype": {
+													"value": "'@{item().cashcentertype}'",
+													"type": "Expression"
+												},
+												"cashcenter": {
+													"value": "'@{item().cashcenter}'",
+													"type": "Expression"
+												},
+												"existCashcentertype": {
+													"value": "'@{item().cashcentertypeid}'",
+													"type": "Expression"
+												},
+												"existRegion": {
+													"value": "'@{item().regionid}'",
+													"type": "Expression"
+												},
+												"existcashcenterID": {
+													"value": "'@{item().cashcenterid}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RegionHash": {},
+												"cashCentertypeHash": {},
+												"cashcenter": {},
+												"sourcecashCenterhashStaging": {},
+												"DWHCashcenterUpdate": {},
+												"DWHCashcenterInsert": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel6')]",
+				"[concat(variables('factoryId'), '/datasets/lookupDynamicData')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWHWorking')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH_copy1')]",
+				"[concat(variables('factoryId'), '/dataflows/CashcenterDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V2Test')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupData",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel6",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupData').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "InitialCopyDataflow_copy1_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicColumnDWHWorking",
+											"type": "DataFlowReference",
+											"parameters": {
+												"source": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"sink": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"parameter1": {
+													"value": "'@{item().col1}'",
+													"type": "Expression"
+												},
+												"parameter2": {
+													"value": "'@{item().col2}'",
+													"type": "Expression"
+												},
+												"parameter3": {
+													"value": "'@{item().col3}'",
+													"type": "Expression"
+												},
+												"parameter4": {
+													"value": "'@{item().col4}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"LocalStaging": {},
+												"SilverLineage": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "removeDuplicateDWH_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "InitialCopyDataflow_copy1_copy1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicDataDuplidaceDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"filename": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"groupby": {
+													"value": "'@{item().groupby}'",
+													"type": "Expression"
+												},
+												"payment": {
+													"value": "'@{item().col5}'",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "'@{item().monthlyPayment\n}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SilverPIPELINE": {},
+												"GoldLineage": {},
+												"sink1": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel6')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWHWorking')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH_copy1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V2_copy1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "lookupDynamicData",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value\n",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "CashcenterDWH",
+											"type": "DataFlowReference",
+											"parameters": {
+												"region": {
+													"value": "'@{item().region}'",
+													"type": "Expression"
+												},
+												"cashcentertype": {
+													"value": "'@{item().cashcentertype}'",
+													"type": "Expression"
+												},
+												"cashcenter": {
+													"value": "'@{item().cashcenter}'",
+													"type": "Expression"
+												},
+												"existCashcentertype": {
+													"value": "'@{item().cashcentertypeid}'",
+													"type": "Expression"
+												},
+												"existRegion": {
+													"value": "'@{item().regionid}'",
+													"type": "Expression"
+												},
+												"existcashcenterID": {
+													"value": "'@{item().cashcenterid}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RegionHash": {},
+												"cashCentertypeHash": {},
+												"cashcenter": {},
+												"sourcecashCenterhashStaging": {},
+												"DWHCashcenterUpdate": {},
+												"DWHCashcenterInsert": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/lookupDynamicData')]",
+				"[concat(variables('factoryId'), '/dataflows/CashcenterDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V2val')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupData",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel6",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupData').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "InitialCopyDataflow_copy1_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicColumnDWHValidate",
+											"type": "DataFlowReference",
+											"parameters": {
+												"source": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"sink": {
+													"value": "'@{item().data\n}'",
+													"type": "Expression"
+												},
+												"parameter1": {
+													"value": "'@{item().col1}'",
+													"type": "Expression"
+												},
+												"parameter2": {
+													"value": "'@{item().col2\n}'",
+													"type": "Expression"
+												},
+												"parameter3": {
+													"value": "'@{item().col3}'",
+													"type": "Expression"
+												},
+												"parameter4": {
+													"value": "'@{item().col4}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"LocalStaging": {},
+												"SilverLineage": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel6')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWHValidate')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_V3')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "LookupData",
+						"type": "Lookup",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel6",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "LookupData",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('LookupData').output.value",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "InitialCopyDataflow_copy1_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicColumnDWHWorking",
+											"type": "DataFlowReference",
+											"parameters": {
+												"source": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"sink": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"parameter1": {
+													"value": "'@{item().col1}'",
+													"type": "Expression"
+												},
+												"parameter2": {
+													"value": "'@{item().col2}'",
+													"type": "Expression"
+												},
+												"parameter3": {
+													"value": "'@{item().col3}'",
+													"type": "Expression"
+												},
+												"parameter4": {
+													"value": "'@{item().col4}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"LocalStaging": {},
+												"SilverLineage": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								},
+								{
+									"name": "removeDuplicateDWH_copy1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [
+										{
+											"activity": "InitialCopyDataflow_copy1_copy1",
+											"dependencyConditions": [
+												"Succeeded"
+											]
+										}
+									],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "dynamicDataDuplidaceDWH_copy1",
+											"type": "DataFlowReference",
+											"parameters": {
+												"filename": {
+													"value": "'@{item().data}'",
+													"type": "Expression"
+												},
+												"groupby": {
+													"value": "'@{item().groupby}'",
+													"type": "Expression"
+												},
+												"payment": {
+													"value": "'@{item().col5}'",
+													"type": "Expression"
+												},
+												"date": {
+													"value": "'@{item().monthlyPayment\n}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"SilverPIPELINE": {},
+												"GoldLineage": {},
+												"sink1": {},
+												"sink2": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "Lookup1",
+						"type": "Lookup",
+						"dependsOn": [
+							{
+								"activity": "ForEachDATA_copy1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "ExcelSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								}
+							},
+							"dataset": {
+								"referenceName": "Excel8",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"firstRowOnly": false
+						}
+					},
+					{
+						"name": "ForEachDATA_copy1_copy1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Lookup1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Lookup1').output.value\n",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "Data flow1",
+									"type": "ExecuteDataFlow",
+									"dependsOn": [],
+									"policy": {
+										"timeout": "1.00:00:00",
+										"retry": 0,
+										"retryIntervalInSeconds": 30,
+										"secureOutput": false,
+										"secureInput": false
+									},
+									"userProperties": [],
+									"typeProperties": {
+										"dataflow": {
+											"referenceName": "CashcenterDWH",
+											"type": "DataFlowReference",
+											"parameters": {
+												"region": {
+													"value": "'@{item().region}'",
+													"type": "Expression"
+												},
+												"cashcentertype": {
+													"value": "'@{item().cashcentertype}'",
+													"type": "Expression"
+												},
+												"cashcenter": {
+													"value": "'@{item().cashcenter}'",
+													"type": "Expression"
+												},
+												"existCashcentertype": {
+													"value": "'@{item().cashcentertypeid}'",
+													"type": "Expression"
+												},
+												"existRegion": {
+													"value": "'@{item().regionid}'",
+													"type": "Expression"
+												},
+												"existcashcenterID": {
+													"value": "'@{item().cashcenterid}'",
+													"type": "Expression"
+												}
+											},
+											"datasetParameters": {
+												"RegionHash": {},
+												"cashCentertypeHash": {},
+												"cashcenter": {},
+												"sourcecashCenterhashStaging": {},
+												"DWHCashcenterUpdate": {},
+												"DWHCashcenterInsert": {}
+											}
+										},
+										"staging": {},
+										"compute": {
+											"coreCount": 8,
+											"computeType": "General"
+										},
+										"traceLevel": "Fine"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"folder": {
+					"name": "DWH"
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel6')]",
+				"[concat(variables('factoryId'), '/datasets/Excel8')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicColumnDWHWorking')]",
+				"[concat(variables('factoryId'), '/dataflows/dynamicDataDuplidaceDWH_copy1')]",
+				"[concat(variables('factoryId'), '/dataflows/CashcenterDWH')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamic data')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "ForEach1",
+						"type": "ForEach",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Failed"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"items": {
+								"value": "@activity('Get Metadata1').output.childItems",
+								"type": "Expression"
+							},
+							"isSequential": true,
+							"activities": [
+								{
+									"name": "If Condition1",
+									"type": "IfCondition",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"expression": {
+											"value": "@startswith(toLower(string(item().name)),'cashcenter01.xlsx' )",
+											"type": "Expression"
+										},
+										"ifFalseActivities": [
+											{
+												"name": "Fail1",
+												"type": "Fail",
+												"dependsOn": [],
+												"userProperties": [],
+												"typeProperties": {
+													"message": {
+														"value": "@item.name",
+														"type": "Expression"
+													},
+													"errorCode": " @item.name"
+												}
+											}
+										],
+										"ifTrueActivities": [
+											{
+												"name": "Data flow1",
+												"type": "ExecuteDataFlow",
+												"dependsOn": [],
+												"policy": {
+													"timeout": "1.00:00:00",
+													"retry": 0,
+													"retryIntervalInSeconds": 30,
+													"secureOutput": false,
+													"secureInput": false
+												},
+												"userProperties": [],
+												"typeProperties": {
+													"dataflow": {
+														"referenceName": "dataflow2",
+														"type": "DataFlowReference",
+														"parameters": {},
+														"datasetParameters": {
+															"source1": {},
+															"source2": {},
+															"sink1": {}
+														}
+													},
+													"staging": {},
+													"compute": {
+														"coreCount": 8,
+														"computeType": "General"
+													},
+													"traceLevel": "Fine"
+												}
+											}
+										]
+									}
+								}
+							]
+						}
+					},
+					{
+						"name": "If Condition1_copy1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@startswith(string(activity('Get Metadata1').output.name[0]),'cashcenter01.xlsx' )",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Fail1_copy1",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": {
+											"value": "@item.name",
+											"type": "Expression"
+										},
+										"errorCode": " @item.name"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"sourcename": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]",
+				"[concat(variables('factoryId'), '/dataflows/dataflow2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamic data_copy1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Get Metadata1",
+						"type": "GetMetadata",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference",
+								"parameters": {}
+							},
+							"fieldList": [
+								"childItems"
+							],
+							"storeSettings": {
+								"type": "AzureBlobFSReadSettings",
+								"recursive": true,
+								"enablePartitionDiscovery": false
+							}
+						}
+					},
+					{
+						"name": "If Condition1_copy1",
+						"type": "IfCondition",
+						"dependsOn": [
+							{
+								"activity": "Get Metadata1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"userProperties": [],
+						"typeProperties": {
+							"expression": {
+								"value": "@startswith(string(activity('Get Metadata1').output.name[0]),'cashcenter01.xlsx' )",
+								"type": "Expression"
+							},
+							"ifFalseActivities": [
+								{
+									"name": "Fail1_copy1",
+									"type": "Fail",
+									"dependsOn": [],
+									"userProperties": [],
+									"typeProperties": {
+										"message": {
+											"value": "@item.name",
+											"type": "Expression"
+										},
+										"errorCode": " @item.name"
+									}
+								}
+							]
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"sourcename": {
+						"type": "string"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/metadatapipeline')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Sample metadata checker rules",
+				"activities": [
+					{
+						"name": "metadataChecker",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "metadataChecker",
+								"type": "DataFlowReference",
+								"parameters": {
+									"filename": "'dynamicdata/moviesDB.csv'",
+									"columns": "'movie,title'",
+									"dbname": "'products'"
+								},
+								"datasetParameters": {
+									"source1": {},
+									"DBSource": {},
+									"WriteResults": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"parameters": {
+					"filename": {
+						"type": "string",
+						"defaultValue": "'SampleData/moviesDB.csv'"
+					}
+				},
+				"variables": {
+					"metacheck": {
+						"type": "String"
+					}
+				},
+				"annotations": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/dataflows/metadataChecker')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/pipeline1')]",
+			"type": "Microsoft.DataFactory/factories/pipelines",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"activities": [
+					{
+						"name": "Copy data1",
+						"type": "Copy",
+						"dependsOn": [],
+						"policy": {
+							"timeout": "7.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"source": {
+								"type": "DelimitedTextSource",
+								"storeSettings": {
+									"type": "AzureBlobFSReadSettings",
+									"recursive": true,
+									"enablePartitionDiscovery": false
+								},
+								"formatSettings": {
+									"type": "DelimitedTextReadSettings"
+								}
+							},
+							"sink": {
+								"type": "DelimitedTextSink",
+								"storeSettings": {
+									"type": "AzureBlobFSWriteSettings"
+								},
+								"formatSettings": {
+									"type": "DelimitedTextWriteSettings",
+									"quoteAllText": true,
+									"fileExtension": ".txt"
+								}
+							},
+							"enableStaging": false,
+							"translator": {
+								"type": "TabularTranslator",
+								"typeConversion": true,
+								"typeConversionSettings": {
+									"allowDataTruncation": true,
+									"treatBooleanAsNumber": false
+								}
+							}
+						},
+						"inputs": [
+							{
+								"referenceName": "DelimitedText1",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						],
+						"outputs": [
+							{
+								"referenceName": "DelimitedText2",
+								"type": "DatasetReference",
+								"parameters": {}
+							}
+						]
+					},
+					{
+						"name": "Data flow1",
+						"type": "ExecuteDataFlow",
+						"dependsOn": [
+							{
+								"activity": "Copy data1",
+								"dependencyConditions": [
+									"Succeeded"
+								]
+							}
+						],
+						"policy": {
+							"timeout": "1.00:00:00",
+							"retry": 0,
+							"retryIntervalInSeconds": 30,
+							"secureOutput": false,
+							"secureInput": false
+						},
+						"userProperties": [],
+						"typeProperties": {
+							"dataflow": {
+								"referenceName": "dataflow1",
+								"type": "DataFlowReference",
+								"parameters": {},
+								"datasetParameters": {
+									"source1": {},
+									"sink1": {}
+								}
+							},
+							"staging": {},
+							"compute": {
+								"coreCount": 8,
+								"computeType": "General"
+							},
+							"traceLevel": "Fine"
+						}
+					}
+				],
+				"policy": {
+					"elapsedTimeMetric": {},
+					"cancelAfter": {}
+				},
+				"annotations": [],
+				"lastPublishTime": "2022-04-30T09:37:34Z"
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/DelimitedText1')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText2')]",
+				"[concat(variables('factoryId'), '/dataflows/dataflow1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureSqlTable1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedService4",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "AzureSqlTable",
+				"schema": [],
+				"typeProperties": {
+					"schema": "dbo",
+					"table": "products"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "sch.csv",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "File header ID",
+						"type": "String"
+					},
+					{
+						"name": "file header description",
+						"type": "String"
+					},
+					{
+						"name": "Start date",
+						"type": "String"
+					},
+					{
+						"name": "End Date ",
+						"type": "String"
+					},
+					{
+						"name": "File item name ",
+						"type": "String"
+					},
+					{
+						"name": "Rows loaded",
+						"type": "String"
+					},
+					{
+						"name": "Rows rejected error",
+						"type": "String"
+					},
+					{
+						"name": "Status",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText2')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "anc.csv",
+						"fileSystem": "newdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText3')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "data"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "TANMAY0",
+						"type": "String"
+					},
+					{
+						"name": "Prop_1",
+						"type": "String"
+					},
+					{
+						"name": "TANMAY2",
+						"type": "String"
+					},
+					{
+						"name": "TANMAY3",
+						"type": "String"
+					},
+					{
+						"name": "V0.1",
+						"type": "String"
+					},
+					{
+						"name": "true",
+						"type": "String"
+					},
+					{
+						"name": "9687595126",
+						"type": "String"
+					},
+					{
+						"name": "40049 Clemons Street",
+						"type": "String"
+					},
+					{
+						"name": "01/03/22",
+						"type": "String"
+					},
+					{
+						"name": "31/03/22",
+						"type": "String"
+					},
+					{
+						"name": "1254635",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DelimitedText4')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": [
+					{
+						"name": "movie",
+						"type": "String"
+					},
+					{
+						"name": "title",
+						"type": "String"
+					},
+					{
+						"name": "genres",
+						"type": "String"
+					},
+					{
+						"name": "year",
+						"type": "String"
+					},
+					{
+						"name": "Rating",
+						"type": "String"
+					},
+					{
+						"name": "RottenTomato",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel1')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreShiftID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTeamID",
+						"type": "String"
+					},
+					{
+						"name": "PayRollNumber",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "DisplayName",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					},
+					{
+						"name": "Mobilenumber",
+						"type": "String"
+					},
+					{
+						"name": "Address ",
+						"type": "String"
+					},
+					{
+						"name": "start date",
+						"type": "String"
+					},
+					{
+						"name": "end date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel4')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedService3",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"container": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreShiftID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTeamID",
+						"type": "String"
+					},
+					{
+						"name": "PayRollNumber",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "DisplayName",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					},
+					{
+						"name": "Mobilenumber",
+						"type": "String"
+					},
+					{
+						"name": "Address ",
+						"type": "String"
+					},
+					{
+						"name": "joined date",
+						"type": "String"
+					},
+					{
+						"name": "end date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel5')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "linkedService3",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobStorageLocation",
+						"fileName": {
+							"value": "@item().name",
+							"type": "Expression"
+						},
+						"container": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "  CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": " RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel6')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "cleanfileSiver.xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "data",
+						"type": "String"
+					},
+					{
+						"name": "col1",
+						"type": "String"
+					},
+					{
+						"name": "col2",
+						"type": "String"
+					},
+					{
+						"name": "col3",
+						"type": "String"
+					},
+					{
+						"name": "col4",
+						"type": "String"
+					},
+					{
+						"name": "col5",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel7')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "test",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": "RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedOn",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedOn",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel8')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dynamicvalidation.xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "cashcenter",
+						"type": "String"
+					},
+					{
+						"name": "cashcentertype",
+						"type": "String"
+					},
+					{
+						"name": "region",
+						"type": "String"
+					},
+					{
+						"name": "cashcentertypeid",
+						"type": "String"
+					},
+					{
+						"name": "regionid",
+						"type": "String"
+					},
+					{
+						"name": "cashcenterid",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Excel9')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTypeID",
+						"type": "String"
+					},
+					{
+						"name": "RegionID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreCode",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreDescription",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedOn",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedOn",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/cashcenter_and_type_region')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage1",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "data"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": [
+					{
+						"name": "EmployeeID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreShiftID",
+						"type": "String"
+					},
+					{
+						"name": "CashCentreTeamID",
+						"type": "String"
+					},
+					{
+						"name": "PayRollNumber",
+						"type": "String"
+					},
+					{
+						"name": "FirstName",
+						"type": "String"
+					},
+					{
+						"name": "LastName",
+						"type": "String"
+					},
+					{
+						"name": "DisplayName",
+						"type": "String"
+					},
+					{
+						"name": "CreatedBy",
+						"type": "String"
+					},
+					{
+						"name": "CreatedOn",
+						"type": "String"
+					},
+					{
+						"name": "UpdatedBy",
+						"type": "String"
+					},
+					{
+						"name": "DeletedBy",
+						"type": "String"
+					},
+					{
+						"name": "RowLockVersion",
+						"type": "String"
+					},
+					{
+						"name": "IsActive",
+						"type": "String"
+					},
+					{
+						"name": "Mobilenumber",
+						"type": "String"
+					},
+					{
+						"name": "Address ",
+						"type": "String"
+					},
+					{
+						"name": "start date",
+						"type": "String"
+					},
+					{
+						"name": "end date",
+						"type": "String"
+					}
+				]
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/folderout')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"folderPath": "output/demoout1",
+						"fileSystem": "mycontainer"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/genericfolder')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "DelimitedText",
+				"typeProperties": {
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileSystem": "dynamicdata"
+					},
+					"columnDelimiter": ",",
+					"escapeChar": "\\",
+					"firstRowAsHeader": true,
+					"quoteChar": "\""
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/lookupDynamicData')]",
+			"type": "Microsoft.DataFactory/factories/datasets",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"linkedServiceName": {
+					"referenceName": "AzureDataLakeStorage2",
+					"type": "LinkedServiceReference"
+				},
+				"annotations": [],
+				"type": "Excel",
+				"typeProperties": {
+					"sheetName": "Sheet1",
+					"location": {
+						"type": "AzureBlobFSLocation",
+						"fileName": "dynamicvalidation (1).xlsx",
+						"fileSystem": "dynamicdata"
+					},
+					"firstRowAsHeader": true
+				},
+				"schema": []
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage1')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage1_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage1_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/AzureDataLakeStorage2')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobFS",
+				"typeProperties": {
+					"url": "[parameters('AzureDataLakeStorage2_properties_typeProperties_url')]",
+					"accountKey": {
+						"type": "SecureString",
+						"value": "[parameters('AzureDataLakeStorage2_accountKey')]"
+					}
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedService3')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureBlobStorage",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedService3_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/linkedService4')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('linkedService4_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/sqldata')]",
+			"type": "Microsoft.DataFactory/factories/linkedServices",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"annotations": [],
+				"type": "AzureSqlDatabase",
+				"typeProperties": {
+					"connectionString": "[parameters('sqldata_connectionString')]"
+				}
+			},
+			"dependsOn": []
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/CashcenterDWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "RegionHash"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "cashCentertypeHash"
+						},
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage2",
+								"type": "LinkedServiceReference"
+							},
+							"name": "cashcenter"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sourcecashCenterhashStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHCashcenterUpdate"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHCashcenterInsert"
+						}
+					],
+					"transformations": [
+						{
+							"name": "existsCashcenterID"
+						},
+						{
+							"name": "Update"
+						},
+						{
+							"name": "Insert"
+						},
+						{
+							"name": "NotexistsCashcenterID"
+						},
+						{
+							"name": "ValidateRegion"
+						},
+						{
+							"name": "exists1"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     region as string,",
+						"     cashcentertype as string,",
+						"     cashcenter as string,",
+						"     existCashcentertype as string,",
+						"     existRegion as string,",
+						"     existcashcenterID as string",
+						"}",
+						"source(output(",
+						"          RegionID as integer,",
+						"          RegionCode as string,",
+						"          RegionDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $region)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> RegionHash",
+						"source(output(",
+						"          CashCentreTypeID as integer,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $cashcentertype)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> cashCentertypeHash",
+						"source(output(",
+						"          CashCentreID as short,",
+						"          CashCentreTypeID as short,",
+						"          RegionID as short,",
+						"          CashCentreCode as string,",
+						"          CashCentreDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as string,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as string,",
+						"          DeletedBy as string,",
+						"          DeletedOn as string,",
+						"          RowLockVersion as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'excel',",
+						"     fileSystem: 'dynamicdata',",
+						"     sheetName: 'test',",
+						"     firstRowAsHeader: true,",
+						"     wildcardPaths:[($cashcenter)]) ~> cashcenter",
+						"source(output(",
+						"          CashCentreID as integer,",
+						"          {  CashCentreTypeID} as short,",
+						"          { RegionID} as short,",
+						"          CashCentreCode as integer,",
+						"          CashCentreDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          CashCentreTypeID as short,",
+						"          CashCentreTypeCode as integer,",
+						"          CashCentreTypeDescription as string,",
+						"          sha as string,",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_cashcenter',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> sourcecashCenterhashStaging",
+						"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+						"     negate:false,",
+						"     broadcast: 'auto')~> existsCashcenterID",
+						"existsCashcenterID alterRow(updateIf(true())) ~> Update",
+						"NotexistsCashcenterID alterRow(insertIf(true())) ~> Insert",
+						"ValidateRegion, sourcecashCenterhashStaging exists(toString(byName($existcashcenterID)) == toString(byName($existcashcenterID)),",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NotexistsCashcenterID",
+						"exists1, RegionHash exists(toString(byName('RegionID','cashcenter')) == toString(byName('RegionID','RegionHash')),",
+						"     negate:false,",
+						"     broadcast: 'auto')~> ValidateRegion",
+						"cashcenter, cashCentertypeHash exists(toString(byName('CashCentreTypeID','cashcenter')) == toString(byName('CashCentreTypeID','cashCentertypeHash')),",
+						"     negate:false,",
+						"     broadcast: 'auto')~> exists1",
+						"Update sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_cashcenter',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['CashCentreID'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHCashcenterUpdate",
+						"Insert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_cashcenter',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHCashcenterInsert"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/ConvergencePurview')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "RegionSource"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "CashcenterSource"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText3",
+								"type": "DatasetReference"
+							},
+							"name": "ConvergingData"
+						}
+					],
+					"transformations": [
+						{
+							"name": "joinData"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'regioncsv.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> RegionSource",
+						"source(output(",
+						"          CashCentreID as integer,",
+						"          {  CashCentreTypeID} as short,",
+						"          { RegionID} as short,",
+						"          CashCentreCode as integer,",
+						"          CashCentreDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'cashcentercsv.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> CashcenterSource",
+						"RegionSource, CashcenterSource join(RegionID == { RegionID},",
+						"     joinType:'outer',",
+						"     broadcast: 'auto')~> joinData",
+						"joinData sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          TANMAY0 as string,",
+						"          Prop_1 as string,",
+						"          TANMAY2 as string,",
+						"          TANMAY3 as string,",
+						"          {V0.1} as string,",
+						"          true as string,",
+						"          {9687595126} as string,",
+						"          {40049 Clemons Street} as string,",
+						"          {01/03/22} as string,",
+						"          {31/03/22} as string,",
+						"          {1254635} as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> ConvergingData"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText3')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_cashcentertype_SQL')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH_sqlCashcenter"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "cashcentertypeNEWdata"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHCashcentertype"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHcashcentertypeUpdate"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHcashcentertypeInsert"
+						}
+					],
+					"transformations": [
+						{
+							"name": "generateHASH"
+						},
+						{
+							"name": "dosentexists"
+						},
+						{
+							"name": "insert"
+						},
+						{
+							"name": "NOTexistsCashcentertypeID"
+						},
+						{
+							"name": "update"
+						},
+						{
+							"name": "Generatehash1"
+						},
+						{
+							"name": "existsCashcentertypeID"
+						},
+						{
+							"name": "DerivecolUpdateDeleted"
+						},
+						{
+							"name": "DerivecolInsertDeleted"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CashCentreTypeID as integer,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'CashCentreType',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> cashcentertypeNEWdata",
+						"source(output(",
+						"          CashCentreTypeID as integer,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_CashCentreType',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> DWHCashcentertype",
+						"cashcentertypeNEWdata derive(sha = sha1(CashCentreTypeID,CashCentreTypeCode,CashCentreTypeDescription,IsActive)) ~> generateHASH",
+						"generateHASH, Generatehash1 exists(generateHASH@sha == Generatehash1@sha,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> dosentexists",
+						"DerivecolInsertDeleted alterRow(insertIf(true())) ~> insert",
+						"dosentexists, DWHCashcentertype exists(cashcentertypeNEWdata@CashCentreTypeID == DWHCashcentertype@CashCentreTypeID,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NOTexistsCashcentertypeID",
+						"DerivecolUpdateDeleted alterRow(updateIf(true())) ~> update",
+						"DWHCashcentertype derive(sha = sha1(CashCentreTypeID,CashCentreTypeCode,CashCentreTypeDescription,IsActive)) ~> Generatehash1",
+						"dosentexists, DWHCashcentertype exists(cashcentertypeNEWdata@CashCentreTypeID == DWHCashcentertype@CashCentreTypeID,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> existsCashcentertypeID",
+						"existsCashcentertypeID derive(UpdatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolUpdateDeleted",
+						"NOTexistsCashcentertypeID derive(CreatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolInsertDeleted",
+						"update sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_CashCentreType',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['CashCentreTypeID'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHcashcentertypeUpdate",
+						"insert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_CashCentreType',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHcashcentertypeInsert"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/DWH_region_SQL')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH_sqlCashcenter"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sourceRegion"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHRegion"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHUpdateRegion"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "DWHinsertRegion"
+						}
+					],
+					"transformations": [
+						{
+							"name": "generateHASH"
+						},
+						{
+							"name": "dosentexists"
+						},
+						{
+							"name": "insert"
+						},
+						{
+							"name": "NOTexistsRegionID"
+						},
+						{
+							"name": "update"
+						},
+						{
+							"name": "GenerateHash1"
+						},
+						{
+							"name": "existsRegionID"
+						},
+						{
+							"name": "DerivecolUpdateDeleted"
+						},
+						{
+							"name": "DerivecolumnInsertDeleted"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          RegionID as integer,",
+						"          RegionCode as string,",
+						"          RegionDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'Region',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> sourceRegion",
+						"source(output(",
+						"          RegionID as integer,",
+						"          RegionCode as string,",
+						"          RegionDescription as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as timestamp,",
+						"          UpdatedBy as string,",
+						"          UpdatedOn as timestamp,",
+						"          DeletedBy as string,",
+						"          DeletedOn as timestamp,",
+						"          RowLockVersion as string,",
+						"          sha as string,",
+						"          IsActive as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_region',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> DWHRegion",
+						"sourceRegion derive(sha = sha1(RegionID,RegionCode,RegionDescription,IsActive)) ~> generateHASH",
+						"generateHASH, GenerateHash1 exists(generateHASH@sha == GenerateHash1@sha,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> dosentexists",
+						"DerivecolumnInsertDeleted alterRow(insertIf(true())) ~> insert",
+						"dosentexists, DWHRegion exists(sourceRegion@RegionID == DWHRegion@RegionID,",
+						"     negate:true,",
+						"     broadcast: 'auto')~> NOTexistsRegionID",
+						"DerivecolUpdateDeleted alterRow(updateIf(true())) ~> update",
+						"DWHRegion derive(sha = sha1(RegionID,RegionCode,RegionDescription,IsActive)) ~> GenerateHash1",
+						"dosentexists, DWHRegion exists(sourceRegion@RegionID == DWHRegion@RegionID,",
+						"     negate:false,",
+						"     broadcast: 'auto')~> existsRegionID",
+						"existsRegionID derive(UpdatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolUpdateDeleted",
+						"NOTexistsRegionID derive(CreatedOn = currentTimestamp(),",
+						"          DeletedOn = case(IsActive==false(), currentTimestamp())) ~> DerivecolumnInsertDeleted",
+						"update sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_Region',",
+						"     insertable: false,",
+						"     updateable: true,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     keys:['RegionID'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHUpdateRegion",
+						"insert sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'DWH_Region',",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> DWHinsertRegion"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/Divergence')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "EMPdata"
+						}
+					],
+					"sinks": [
+						{
+							"dataset": {
+								"referenceName": "DelimitedText2",
+								"type": "DatasetReference"
+							},
+							"name": "EMPDATASPLIT1"
+						},
+						{
+							"dataset": {
+								"referenceName": "DelimitedText1",
+								"type": "DatasetReference"
+							},
+							"name": "EMPDATASPLIT2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "COLselect2"
+						},
+						{
+							"name": "COLselect"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmployeeID as short,",
+						"          CashCentreID1 as integer,",
+						"          CashCentreShiftID as integer,",
+						"          CashCentreTeamID as long,",
+						"          PayRollNumber as long,",
+						"          FirstName as string,",
+						"          LastName as string,",
+						"          DisplayName as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as date,",
+						"          UpdatedBy as string,",
+						"          DeletedBy as string,",
+						"          RowLockVersion as string,",
+						"          IsActive as boolean,",
+						"          Mobilenumber as long,",
+						"          {Address } as string,",
+						"          {start date} as string,",
+						"          {end date} as string,",
+						"          CashCentreID18 as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'delimited',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'empdataa.csv',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: true) ~> EMPdata",
+						"EMPdata select(mapColumn(",
+						"          EmployeeID,",
+						"          CashCentreID1,",
+						"          CashCentreShiftID,",
+						"          CashCentreTeamID,",
+						"          PayRollNumber,",
+						"          FirstName",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> COLselect2",
+						"EMPdata select(mapColumn(",
+						"          CreatedBy,",
+						"          CreatedOn,",
+						"          UpdatedBy,",
+						"          DeletedBy,",
+						"          RowLockVersion,",
+						"          IsActive,",
+						"          Mobilenumber,",
+						"          {Address },",
+						"          {start date},",
+						"          {end date},",
+						"          CashCentreID18",
+						"     ),",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> COLselect",
+						"COLselect sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     umask: 0777,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> EMPDATASPLIT1",
+						"COLselect2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     input(",
+						"          {File header ID} as string,",
+						"          {file header description} as string,",
+						"          {Start date} as string,",
+						"          {End Date } as string,",
+						"          {File item name } as string,",
+						"          {Rows loaded} as string,",
+						"          {Rows rejected error} as string,",
+						"          Status as string",
+						"     ),",
+						"     umask: 0022,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> EMPDATASPLIT2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText2')]",
+				"[concat(variables('factoryId'), '/datasets/DelimitedText1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService3",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source1"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage1",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn1"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "aggregate3"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          CashCentreTypeID as short,",
+						"          CashCentreTypeCode as integer,",
+						"          CashCentreTypeDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          pass as string,",
+						"          Month as date 'dd/MM/yyyy',",
+						"          payment as integer",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'excel',",
+						"     container: 'dynamicdata',",
+						"     fileName: 'cashcentertype.xlsx',",
+						"     sheetName: 'Sheet1',",
+						"     firstRowAsHeader: true) ~> source1",
+						"source1 derive(abc = toString(byName('CashCentreTypeID'))) ~> derivedColumn1",
+						"derivedColumn1 aggregate(groupBy(bb = toString(byName('CashCentreTypeID'))),",
+						"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate1",
+						"source1 aggregate(groupBy(Month = month(Month)),",
+						"     each(match(name=='payment'), $$ = sum($$))) ~> aggregate3",
+						"aggregate1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'delimited',",
+						"     fileSystem: 'newdata',",
+						"     folderPath: 'selectdata',",
+						"     columnDelimiter: ',',",
+						"     escapeChar: '\\\\',",
+						"     quoteChar: '\\\"',",
+						"     columnNamesAsHeader: false,",
+						"     umask: 0777,",
+						"     preCommands: [],",
+						"     postCommands: [],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService3')]",
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage1')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dataflow2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "cashcenter_and_type_region",
+								"type": "DatasetReference"
+							},
+							"name": "source1"
+						},
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source2"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "union1"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "derivedColumn2"
+						}
+					],
+					"scriptLines": [
+						"source(output(",
+						"          EmployeeID as string,",
+						"          CashCentreID as string,",
+						"          CashCentreShiftID as string,",
+						"          CashCentreTeamID as string,",
+						"          PayRollNumber as string,",
+						"          FirstName as string,",
+						"          LastName as string,",
+						"          DisplayName as string,",
+						"          CreatedBy as string,",
+						"          CreatedOn as string,",
+						"          UpdatedBy as string,",
+						"          DeletedBy as string,",
+						"          RowLockVersion as string,",
+						"          IsActive as string,",
+						"          Mobilenumber as string,",
+						"          {Address } as string,",
+						"          {start date} as string,",
+						"          {end date} as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false) ~> source1",
+						"source(output(",
+						"          CashCentreTypeID as string,",
+						"          CashCentreTypeCode as string,",
+						"          CashCentreTypeDescription as string,",
+						"          RowLockVersion as string,",
+						"          IsActive as string,",
+						"          pass as string,",
+						"          Month as string,",
+						"          payment as string,",
+						"          validate as boolean",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: 'silver/cashcentertype.xlsx',",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> source2",
+						"source1, source1 union(byName: true)~> union1",
+						"derivedColumn2 aggregate(groupBy(monthtotal = month(toDate(Month))),",
+						"     each(match(name=='payment'), $$ = sum(toInteger($$)))) ~> aggregate1",
+						"source2 derive(aa = (toDate(toInteger(Month)))) ~> derivedColumn2",
+						"union1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'schema',",
+						"     tableName: ($file),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/cashcenter_and_type_region')]",
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DUMMYvalidate"
+						},
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string (''),",
+						"     parameter5 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
+						"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]",
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWHValidate')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage2",
+								"type": "LinkedServiceReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "derivedColumn9"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "assert2"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          MobileNumber as string,",
+						"          {start date} as date,",
+						"          emailid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'excel',",
+						"     fileSystem: 'dynamicdata',",
+						"     sheetName: 'Sheet1',",
+						"     firstRowAsHeader: true,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
+						"derivedColumn9 split(case((type($parameter3))==type('date'), true()),",
+						"     disjoint: false) ~> split1@(hasdate, dnthave)",
+						"split1@hasdate assert(expectTrue(between(toDate(toString(byName('start date'))),currentDate()-9125,currentDate()+15), false, 'assert1')) ~> assert2",
+						"assert2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWHWorking')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage2",
+								"type": "LinkedServiceReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "mobile"
+						},
+						{
+							"name": "email"
+						},
+						{
+							"name": "split2"
+						},
+						{
+							"name": "derivedColumn7"
+						},
+						{
+							"name": "derivedColumn8"
+						},
+						{
+							"name": "derivedColumn9"
+						},
+						{
+							"name": "alterRow1"
+						},
+						{
+							"name": "alterRow2"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'excel',",
+						"     fileSystem: 'dynamicdata',",
+						"     sheetName: 'Sheet1',",
+						"     firstRowAsHeader: true,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"derivedColumn9 derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+						"     disjoint: false) ~> split1@(date, validate)",
+						"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+						"mobile derive(each(match(name=='emailid'), 'validated email' = case(like(toString(byName($parameter4)),'%@%.com'),$$))) ~> email",
+						"split1@validate split($parameter3=='start date',",
+						"     disjoint: false) ~> split2@(error, OtherData)",
+						"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
+						"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+						"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
+						"RegexNum alterRow(upsertIf(true())) ~> alterRow1",
+						"derivedColumn7 alterRow(upsertIf(true())) ~> alterRow2",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+						"alterRow2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: true,",
+						"     keys:['VALIDATE'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWHWorking_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage2",
+								"type": "LinkedServiceReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "mobile"
+						},
+						{
+							"name": "email"
+						},
+						{
+							"name": "split2"
+						},
+						{
+							"name": "derivedColumn7"
+						},
+						{
+							"name": "derivedColumn8"
+						},
+						{
+							"name": "derivedColumn9"
+						},
+						{
+							"name": "alterRow1"
+						},
+						{
+							"name": "alterRow2"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     format: 'excel',",
+						"     fileSystem: 'dynamicdata',",
+						"     sheetName: 'Sheet1',",
+						"     firstRowAsHeader: true,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"derivedColumn9 derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"email split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+						"     disjoint: false) ~> split1@(date, validate)",
+						"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+						"mobile derive(each(match(name=='emailid'), 'validated email' = case(like(toString(byName($parameter4)),'%@%.com'),$$))) ~> email",
+						"split1@validate split($parameter3=='start date',",
+						"     disjoint: false) ~> split2@(error, OtherData)",
+						"split2@OtherData derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
+						"RegexSTR derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+						"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
+						"RegexNum alterRow(upsertIf(true())) ~> alterRow1",
+						"derivedColumn7 alterRow(upsertIf(true())) ~> alterRow2",
+						"alterRow1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+						"alterRow2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: true,",
+						"     keys:['VALIDATE'],",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy2')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						},
+						{
+							"name": "sink1"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "mobile"
+						},
+						{
+							"name": "email"
+						},
+						{
+							"name": "derivedColumn6"
+						},
+						{
+							"name": "derivedColumn7"
+						},
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "derivedColumn8"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          MobileNumber as string,",
+						"          {start date} as date,",
+						"          emailid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"filter1 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+						"     disjoint: true) ~> split1@(date, nodate)",
+						"RegexSTR derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+						"mobile derive(each(match(name=='emailid'), $$ = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
+						"split1@nodate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
+						"derivedColumn8 derive(date = between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)) ~> derivedColumn7",
+						"derivedColumn7 filter(date==true()) ~> filter1",
+						"email derive(each(match(type=='date'), $$ = between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15)),",
+						"          date = case(type($parameter3)=='date', between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),false())) ~> derivedColumn8",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+						"derivedColumn6 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink1"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy3')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "test"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						},
+						{
+							"name": "sink1"
+						},
+						{
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						},
+						{
+							"name": "split1"
+						},
+						{
+							"name": "mobile"
+						},
+						{
+							"name": "email"
+						},
+						{
+							"name": "derivedColumn6"
+						},
+						{
+							"name": "split2"
+						},
+						{
+							"name": "derivedColumn7"
+						},
+						{
+							"name": "filter1"
+						},
+						{
+							"name": "derivedColumn8"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string ('')",
+						"}",
+						"source(output(",
+						"          RegionID as short,",
+						"          RegionCode as short,",
+						"          RegionDescription as string,",
+						"          RowLockVersion as short,",
+						"          IsActive as boolean,",
+						"          MobileNumber as string,",
+						"          {start date} as date,",
+						"          emailid as string",
+						"     ),",
+						"     allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"split1@date derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"filter1 split(between(toDate(toString(byName($parameter3))),currentDate()-9125,currentDate()+15),",
+						"     disjoint: true) ~> split1@(date, invalid)",
+						"derivedColumn8 derive(each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid'))) ~> mobile",
+						"mobile derive(each(match(name=='emailid'), 'validated email' = case(like( toString(byName($parameter4)),'%@%.com'),$$,'invalid'))) ~> email",
+						"split2@error derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn6",
+						"split1@invalid split($parameter3=='start date',",
+						"     disjoint: false) ~> split2@(error, validate)",
+						"split2@validate derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn7",
+						"email filter({validated email}!='invalid') ~> filter1",
+						"RegexSTR derive(each(match(type=='short'||type=='integer'&&name==$parameter1||name==$parameter2||name==$parameter4), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]',''))) ~> derivedColumn8",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+						"derivedColumn6 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink1",
+						"derivedColumn7 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     store: 'cache',",
+						"     format: 'inline',",
+						"     output: false,",
+						"     saveOrder: 1) ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicColumnDWH_copy4')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"dataset": {
+								"referenceName": "Excel1",
+								"type": "DatasetReference"
+							},
+							"name": "LocalStaging"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "DUMMYvalidate"
+						},
+						{
+							"name": "RegexSTR"
+						},
+						{
+							"name": "RegexNum"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     source as string,",
+						"     sink as string,",
+						"     parameter1 as string (''),",
+						"     parameter2 as string (''),",
+						"     parameter3 as string (''),",
+						"     parameter4 as string (''),",
+						"     parameter5 as string ('')",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     ignoreNoFilesFound: false,",
+						"     wildcardPaths:[($source)]) ~> LocalStaging",
+						"LocalStaging derive(validate = true()) ~> DUMMYvalidate",
+						"DUMMYvalidate derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3||name==$parameter4||name==$parameter5), $$ = regexReplace($$, '[!@#$%^&*()]',''))) ~> RegexSTR",
+						"RegexSTR derive(each(match(type=='short'), $$ = regexReplace($$, '[!@#$%^&*a-zA-Z]',''))) ~> RegexNum",
+						"RegexNum sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$sink)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/datasets/Excel1')]",
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicDataDuplidaceDWH')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverPIPELINE"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "sqldata",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GoldLineage"
+						}
+					],
+					"transformations": [
+						{
+							"name": "REMOVEDUP"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     filename as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$filename)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
+						"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
+						"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
+						"REMOVEDUP sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/sqldata')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/dynamicDataDuplidaceDWH_copy1')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"folder": {
+					"name": "DWH"
+				},
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "SilverPIPELINE"
+						}
+					],
+					"sinks": [
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "GoldLineage"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink1"
+						},
+						{
+							"linkedService": {
+								"referenceName": "linkedService4",
+								"type": "LinkedServiceReference"
+							},
+							"name": "sink2"
+						}
+					],
+					"transformations": [
+						{
+							"name": "REMOVEDUP"
+						},
+						{
+							"name": "aggregate1"
+						},
+						{
+							"name": "aggregate2"
+						}
+					],
+					"scriptLines": [
+						"parameters{",
+						"     filename as string,",
+						"     groupby as string,",
+						"     payment as string,",
+						"     date as string",
+						"}",
+						"source(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('silver/',$filename)),",
+						"     isolationLevel: 'READ_UNCOMMITTED') ~> SilverPIPELINE",
+						"SilverPIPELINE aggregate(groupBy(hash = sha2(256,columns())),",
+						"     each(match(true()), $$ = first($$))) ~> REMOVEDUP",
+						"SilverPIPELINE aggregate(groupBy(totalPayment = toString(byName($groupby))),",
+						"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate1",
+						"SilverPIPELINE aggregate(groupBy(monthTotal = month(toDate(toString(byName($date))))),",
+						"     each(match(name==$payment), $$ = sum(toInteger($$)))) ~> aggregate2",
+						"REMOVEDUP sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> GoldLineage",
+						"aggregate1 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold_aggregation/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+						"aggregate2 sink(allowSchemaDrift: true,",
+						"     validateSchema: false,",
+						"     format: 'table',",
+						"     store: 'sqlserver',",
+						"     schemaName: 'dbo',",
+						"     tableName: (concat('gold_dateTotal/', $filename)),",
+						"     insertable: true,",
+						"     updateable: false,",
+						"     deletable: false,",
+						"     upsertable: false,",
+						"     skipDuplicateMapInputs: true,",
+						"     skipDuplicateMapOutputs: true,",
+						"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+					]
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/linkedService4')]"
+			]
+		},
+		{
+			"name": "[concat(parameters('factoryName'), '/metadataChecker')]",
+			"type": "Microsoft.DataFactory/factories/dataflows",
+			"apiVersion": "2018-06-01",
+			"properties": {
+				"description": "Sample metadata checker rules",
+				"type": "MappingDataFlow",
+				"typeProperties": {
+					"sources": [
+						{
+							"linkedService": {
+								"referenceName": "AzureDataLakeStorage2",
+								"type": "LinkedServiceReference"
+							},
+							"name": "source1"
+						},
+						{
+							"dataset": {
+								"referenceName": "AzureSqlTable1",
+								"type": "DatasetReference"
+							},
+							"name": "DBSource"
+						}
+					],
+					"sinks": [
+						{
+							"name": "WriteResults"
+						}
+					],
+					"transformations": [
+						{
+							"name": "ConditionalSplit1"
+						},
+						{
+							"name": "ConditionalSplit2"
+						},
+						{
+							"name": "BuildModel"
+						},
+						{
+							"name": "GroupBadSources"
+						},
+						{
+							"name": "GroupGoodSources"
+						},
+						{
+							"name": "LabelSource"
+						},
+						{
+							"name": "LabelSource2"
+						},
+						{
+							"name": "SetAsBad"
+						},
+						{
+							"name": "SetAsGood"
+						},
+						{
+							"name": "GroupAll"
+						}
+					],
+					"script": "parameters{\n\tfilename as string ('moviesDB.csv'),\n\tcolumns as string ('movie,title'),\n\tdbname as string ('products')\n}\nsource(output(\n\t\tmovie as integer,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as short,\n\t\tRating as short,\n\t\tRottenTomato as short\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 1,\n\tignoreNoFilesFound: false,\n\tformat: 'delimited',\n\tfileSystem: 'dynamicdata',\n\tcolumnDelimiter: ',',\n\tescapeChar: '\\\\',\n\tquoteChar: '\\\"',\n\tcolumnNamesAsHeader: true,\n\twildcardPaths:[($filename)]) ~> source1\nsource(output(\n\t\tmovie as integer,\n\t\ttitle as string,\n\t\tgenres as string,\n\t\tyear as integer,\n\t\tRating as integer,\n\t\tRottenTomato as integer\n\t),\n\tallowSchemaDrift: true,\n\tvalidateSchema: false,\n\tlimit: 1,\n\tisolationLevel: 'READ_UNCOMMITTED',\n\tformat: 'table') ~> DBSource\nLabelSource2 split(isNull(byName('ProductID')),\n\tdisjoint: false) ~> ConditionalSplit1@(badSchema, goodSchema)\nLabelSource split(isNull(columnNames()[8]),\n\tdisjoint: false) ~> ConditionalSplit2@(badColCount, goodColCount)\nConditionalSplit2@goodColCount derive(MovieID = toInteger(byName('movie')),\n\t\tMovieTitle = byName('title'),\n\t\tMovieYearReleased = toInteger(byName('year')),\n\t\tMovieRating = toInteger(byName('Rating')),\n\t\tMovieGenres = split(toString(byName('genres')),'|')) ~> BuildModel\nConditionalSplit2@badColCount, ConditionalSplit1@badSchema union(byName: true)~> GroupBadSources\nBuildModel, ConditionalSplit1@goodSchema union(byName: true)~> GroupGoodSources\nsource1 derive(sourcename = $filename,\n\t\truleName = 'Column Count') ~> LabelSource\nDBSource derive(sourcename = $dbname,\n\t\truleName = 'ID Check') ~> LabelSource2\nGroupBadSources derive(results = 'bad') ~> SetAsBad\nGroupGoodSources derive(results = 'good') ~> SetAsGood\nSetAsBad, SetAsGood union(byName: true)~> GroupAll\nGroupAll sink(allowSchemaDrift: true,\n\tvalidateSchema: false,\n\tpartitionFileNames:['metachecker.csv'],\n\tskipDuplicateMapInputs: true,\n\tskipDuplicateMapOutputs: true,\n\tstore: 'cache',\n\tformat: 'inline',\n\toutput: false,\n\tsaveOrder: 1,\n\tmapColumn(\n\t\tsourcename,\n\t\truleName,\n\t\tresults\n\t),\n\tpartitionBy('hash', 1)) ~> WriteResults"
+				}
+			},
+			"dependsOn": [
+				"[concat(variables('factoryId'), '/linkedServices/AzureDataLakeStorage2')]",
+				"[concat(variables('factoryId'), '/datasets/AzureSqlTable1')]"
+			]
+		}
+	]
+}
