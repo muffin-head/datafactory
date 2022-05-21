@@ -2,16 +2,16 @@
 	"name": "folderout",
 	"properties": {
 		"linkedServiceName": {
-			"referenceName": "linkedService3",
+			"referenceName": "AzureDataLakeStorage2",
 			"type": "LinkedServiceReference"
 		},
 		"annotations": [],
 		"type": "DelimitedText",
 		"typeProperties": {
 			"location": {
-				"type": "AzureBlobStorageLocation",
+				"type": "AzureBlobFSLocation",
 				"folderPath": "output/demoout1",
-				"container": "mycontainer"
+				"fileSystem": "mycontainer"
 			},
 			"columnDelimiter": ",",
 			"escapeChar": "\\",
