@@ -22,17 +22,52 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "SilverLineage"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService4",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService4",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
 				}
 			],
 			"transformations": [
-				{
-					"name": "derivedColumn9"
-				},
 				{
 					"name": "split1"
 				},
 				{
 					"name": "assert2"
+				},
+				{
+					"name": "derivedColumn10"
+				},
+				{
+					"name": "derivedColumn11"
+				},
+				{
+					"name": "alterRow1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "derivedColumn14"
+				},
+				{
+					"name": "filter2"
+				},
+				{
+					"name": "alterRow2"
+				},
+				{
+					"name": "assert3"
 				}
 			],
 			"scriptLines": [
@@ -62,23 +97,66 @@
 				"     sheetName: 'Sheet1',",
 				"     firstRowAsHeader: true,",
 				"     wildcardPaths:[($source)]) ~> LocalStaging",
-				"LocalStaging derive(VALIDATE = true()) ~> derivedColumn9",
-				"derivedColumn9 split(case((type($parameter3))==type('date'), true()),",
+				"derivedColumn11 split(case((type($parameter3))==type('date'), true()),",
 				"     disjoint: false) ~> split1@(hasdate, dnthave)",
-				"split1@hasdate assert(expectTrue(between(toDate(toString(byName('start date'))),currentDate()-9125,currentDate()+15), false, 'assert1')) ~> assert2",
-				"assert2 sink(allowSchemaDrift: true,",
+				"split1@hasdate assert(expectTrue(between(toDate(toString(byName('start date'))),currentDate()-9125,currentDate()+15), false, 'assert1'),",
+				"     expectTrue((like(toString(byName($parameter4)),'%@%.com')), false, 'assert2')) ~> assert2",
+				"LocalStaging derive(each(match(type=='string'&&name==$parameter1||name==$parameter2||name==$parameter3), $$ = regexReplace(toString($$), '[!@#$%^&*()]','')),",
+				"          each(match(name=='grade'), $$ = compare($$,4)<4&& not(isNull($$)))) ~> derivedColumn10",
+				"assert3 derive(each(match(type=='short'||type=='integer'), $$ = regexReplace(toString($$), '[!@#$%^&*a-zA-Z]','')),",
+				"          each(match(name=='MobileNumber'), $$ = case(length(right(toString(byName($parameter2)), 10))==10,(right(toString(byName($parameter2)), 10)),'invalid')),",
+				"          each(match(name=='emailid'), $$ = case(like(toString(byName($parameter4)),'%@%.com'),$$)),",
+				"          VALIDATE = true()) ~> derivedColumn11",
+				"split1@dnthave alterRow(upsertIf(true())) ~> alterRow1",
+				"derivedColumn14 filter(isError()) ~> filter1",
+				"assert2 derive(dateerror = hasError('assert1'),",
+				"          emailError = hasError('assert2')) ~> derivedColumn14",
+				"derivedColumn14 filter(not(isError())) ~> filter2",
+				"filter2 alterRow(upsertIf(true())) ~> alterRow2",
+				"derivedColumn10 assert(expectTrue(length(toString(byName('first name')))<50, false, 'assertfirstname', hasColumn('first name')),",
+				"     expectTrue(length(toString(byName('last name')))<50, false, 'assertlastname', hasColumn('last name')),",
+				"     expectTrue(length(toString(byName('location')))<50, false, 'assertloc', hasColumn('location'))) ~> assert3",
+				"filter1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
 				"     schemaName: 'dbo',",
-				"     tableName: (concat('silver/',$sink)),",
+				"     tableName: (concat('ERRORsilver/',$sink)),",
 				"     insertable: true,",
 				"     updateable: false,",
 				"     deletable: false,",
 				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage"
+				"     errorHandlingOption: 'stopOnFirstError') ~> SilverLineage",
+				"alterRow1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$sink)),",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:[($parameter1)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+				"alterRow2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$sink)),",
+				"     insertable: false,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:[($parameter1)],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
 			]
 		}
 	}
