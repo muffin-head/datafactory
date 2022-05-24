@@ -1,0 +1,9 @@
+{
+	"name": "muffin2405",
+	"location": "eastus",
+	"identity": {
+		"type": "SystemAssigned",
+		"principalId": "e5dfea37-08dc-4b03-8149-222237621a34",
+		"tenantId": "0aac878c-59ea-4dcd-82e1-c0bbd579a152"
+	}
+}
