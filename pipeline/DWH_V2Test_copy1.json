@@ -63,31 +63,47 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "dynamicColumnDWHWorking",
+									"referenceName": "DynamictestingV01",
 									"type": "DataFlowReference",
 									"parameters": {
-										"source": {
-											"value": "'@{item().data}'",
+										"File": {
+											"value": "'@{item().File}'",
 											"type": "Expression"
 										},
-										"sink": {
-											"value": "'@{item().data}'",
+										"RecordLenValidate1": {
+											"value": "'@{item().RecordLenValidate1\n}'",
 											"type": "Expression"
 										},
-										"parameter1": {
-											"value": "'@{item().col1}'",
+										"RecordLen1": {
+											"value": "@item().RecordLen1\n",
 											"type": "Expression"
 										},
-										"parameter2": {
-											"value": "'@{item().col2}'",
+										"RecordLenValidate2": {
+											"value": "'@{item().RecordLenValidate2}'",
 											"type": "Expression"
 										},
-										"parameter3": {
-											"value": "'@{item().col3}'",
+										"RecordLen2": {
+											"value": "@item().RecordLen2",
 											"type": "Expression"
 										},
-										"parameter4": {
-											"value": "'@{item().col4}'",
+										"RecordSizeValidate": {
+											"value": "'@{item().RecordSizeValidate}'",
+											"type": "Expression"
+										},
+										"RecordSize": {
+											"value": "@item().RecordSize",
+											"type": "Expression"
+										},
+										"Date1Record": {
+											"value": "'@{item().Date1Record}'",
+											"type": "Expression"
+										},
+										"Date2record": {
+											"value": "'@{item().Date2Record}'",
+											"type": "Expression"
+										},
+										"Date3record": {
+											"value": "'@{item().Date3Record}'",
 											"type": "Expression"
 										}
 									}
