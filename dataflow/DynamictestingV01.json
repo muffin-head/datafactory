@@ -18,18 +18,31 @@
 			"sinks": [
 				{
 					"linkedService": {
-						"referenceName": "linkedService4",
+						"referenceName": "linkedService5",
 						"type": "LinkedServiceReference"
 					},
-					"name": "sink2"
+					"name": "sqlSink"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService5",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
 				}
 			],
 			"transformations": [
 				{
-					"name": "derivedColumn1"
+					"name": "VALIDATE"
 				},
 				{
-					"name": "assert1"
+					"name": "ErrorMarking"
+				},
+				{
+					"name": "Error"
+				},
+				{
+					"name": "Validated"
 				}
 			],
 			"scriptLines": [
@@ -39,36 +52,76 @@
 				"     RecordLen1 as integer (0),",
 				"     RecordLenValidate2 as string (''),",
 				"     RecordLen2 as integer (0),",
-				"     RecordSizeValidate as string,",
-				"     RecordSize as integer,",
-				"     Date1Record as string,",
-				"     Date2record as string,",
-				"     Date3record as string",
+				"     RecordSizeValidate as string (''),",
+				"     RecordSize as integer (0),",
+				"     Date1Record as string (''),",
+				"     Date2record as string (''),",
+				"     Date3record as string ('')",
 				"}",
-				"source(allowSchemaDrift: true,",
+				"source(output(",
+				"          FirstName as string,",
+				"          LastName as string,",
+				"          Grade as short,",
+				"          StartDate as date,",
+				"          PromotionDate as date,",
+				"          EndDate as date",
+				"     ),",
+				"     allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     ignoreNoFilesFound: false,",
 				"     format: 'excel',",
-				"     fileSystem: 'schema',",
-				"     fileName: ($File),",
+				"     fileSystem: 'data',",
 				"     sheetName: 'Sheet1',",
-				"     firstRowAsHeader: true) ~> LocalStaging",
-				"assert1 derive(each(match(type=='string'&&name==$RecordLenValidate1&&$RecordLen1!=0), $$ = ERROR_FUNCTION(''))) ~> derivedColumn1",
-				"LocalStaging assert(expectTrue(length(toString(byName($RecordLenValidate1)))<$RecordLen1, false, 'assert1', $RecordLen1!=0)) ~> assert1",
-				"split2@OtherData sink(allowSchemaDrift: true,",
+				"     firstRowAsHeader: true,",
+				"     wildcardPaths:[($File)]) ~> LocalStaging",
+				"LocalStaging assert(expectTrue(length(toString(byName($RecordLenValidate1)))<$RecordLen1, false, 'LengthErrorid', $RecordLen1!=0),",
+				"     expectTrue(length(toString(byName($RecordLenValidate2)))<$RecordLen2, false, 'LengthError2id', $RecordLen2!=0),",
+				"     expectTrue(toInteger(byName($RecordSizeValidate))<$RecordSize, false, 'sizeErrorid', $RecordSize!=0),",
+				"     expectTrue(case(toDate(toString(byName($Date1Record)))<toDate(toString(byName($Date3record))),true()), false, 'DateFormatErrorid', $Date1Record!=''),",
+				"     expectTrue(between(toDate(toString(byName($Date1Record))),currentDate()-9125,currentDate()+15), false, 'InvalidDateid', $Date1Record!=''),",
+				"     expectTrue(isDate(toString(byName($Date1Record)))&&isDate(toString(byName($Date2record)))&&isDate(toString(byName($Date3record))), false, 'UnknownDateid', $Date1Record!='')) ~> VALIDATE",
+				"VALIDATE derive(LengthError = hasError('LengthError'),",
+				"          LengthError2 = hasError('LengthError2id'),",
+				"          sizeError = hasError('sizeErrorid'),",
+				"          DateFormatError = hasError('DateFormatErrorid'),",
+				"          InvalidDate = hasError('InvalidDateid'),",
+				"          UnknownDate = hasError('UnknownDateid')) ~> ErrorMarking",
+				"ErrorMarking filter(isError()) ~> Error",
+				"ErrorMarking filter(not(isError())) ~> Validated",
+				"Validated sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
 				"     schemaName: 'dbo',",
-				"     tableName: (concat('silver/',$sink)),",
+				"     tableName: (concat('silver/', $File)),",
 				"     insertable: true,",
 				"     updateable: false,",
 				"     deletable: false,",
-				"     upsertable: true,",
-				"     keys:['VALIDATE'],",
+				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+				"     errorHandlingOption: 'stopOnFirstError',",
+				"     mapColumn(",
+				"          FirstName,",
+				"          LastName,",
+				"          Grade,",
+				"          StartDate,",
+				"          PromotionDate,",
+				"          EndDate",
+				"     )) ~> sqlSink",
+				"Error sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('SilverError/', $File)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1"
 			]
 		}
 	}
