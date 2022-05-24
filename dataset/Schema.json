@@ -1,0 +1,62 @@
+{
+	"name": "Schema",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "schema.xlsx",
+				"fileSystem": "schema"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "File",
+				"type": "String"
+			},
+			{
+				"name": "RecordLenValidate1",
+				"type": "String"
+			},
+			{
+				"name": "RecordLen1",
+				"type": "String"
+			},
+			{
+				"name": "RecordLenValidate2",
+				"type": "String"
+			},
+			{
+				"name": "RecordLen2",
+				"type": "String"
+			},
+			{
+				"name": "RecordSizeValidate",
+				"type": "String"
+			},
+			{
+				"name": "RecordSize",
+				"type": "String"
+			},
+			{
+				"name": "Date1Record",
+				"type": "String"
+			},
+			{
+				"name": "Date2record",
+				"type": "String"
+			},
+			{
+				"name": "Date3record",
+				"type": "String"
+			}
+		]
+	}
+}

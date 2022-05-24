@@ -1,0 +1,75 @@
+{
+	"name": "DynamictestingV01",
+	"properties": {
+		"folder": {
+			"name": "dynamic test"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage3",
+						"type": "LinkedServiceReference"
+					},
+					"name": "LocalStaging"
+				}
+			],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "linkedService4",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				}
+			],
+			"transformations": [
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "assert1"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     File as string,",
+				"     RecordLenValidate1 as string (''),",
+				"     RecordLen1 as integer (0),",
+				"     RecordLenValidate2 as string (''),",
+				"     RecordLen2 as integer (0),",
+				"     RecordSizeValidate as string,",
+				"     RecordSize as integer,",
+				"     Date1Record as string,",
+				"     Date2record as string,",
+				"     Date3record as string",
+				"}",
+				"source(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'excel',",
+				"     fileSystem: 'schema',",
+				"     fileName: ($File),",
+				"     sheetName: 'Sheet1',",
+				"     firstRowAsHeader: true) ~> LocalStaging",
+				"assert1 derive(each(match(type=='string'&&name==$RecordLenValidate1&&$RecordLen1!=0), $$ = ERROR_FUNCTION(''))) ~> derivedColumn1",
+				"LocalStaging assert(expectTrue(length(toString(byName($RecordLenValidate1)))<$RecordLen1, false, 'assert1', $RecordLen1!=0)) ~> assert1",
+				"split2@OtherData sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('silver/',$sink)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: true,",
+				"     keys:['VALIDATE'],",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+			]
+		}
+	}
+}

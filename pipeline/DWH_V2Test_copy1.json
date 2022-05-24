@@ -1,0 +1,111 @@
+{
+	"name": "DWH_V2Test_copy1",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupData",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"dataset": {
+						"referenceName": "Schema",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachDATA_copy1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupData').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "InitialCopyDataflow_copy1_copy1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "dynamicColumnDWHWorking",
+									"type": "DataFlowReference",
+									"parameters": {
+										"source": {
+											"value": "'@{item().data}'",
+											"type": "Expression"
+										},
+										"sink": {
+											"value": "'@{item().data}'",
+											"type": "Expression"
+										},
+										"parameter1": {
+											"value": "'@{item().col1}'",
+											"type": "Expression"
+										},
+										"parameter2": {
+											"value": "'@{item().col2}'",
+											"type": "Expression"
+										},
+										"parameter3": {
+											"value": "'@{item().col3}'",
+											"type": "Expression"
+										},
+										"parameter4": {
+											"value": "'@{item().col4}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "dynamicTest"
+		},
+		"annotations": []
+	}
+}
