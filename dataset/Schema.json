@@ -11,7 +11,7 @@
 			"sheetName": "Sheet1",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "schema.xlsx",
+				"fileName": "schemaMaster.xlsx",
 				"fileSystem": "schema"
 			},
 			"firstRowAsHeader": true
