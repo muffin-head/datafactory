@@ -22,7 +22,22 @@
 					"name": "source1"
 				}
 			],
-			"sinks": [],
+			"sinks": [
+				{
+					"linkedService": {
+						"referenceName": "linkedService5",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink1"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService5",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink2"
+				}
+			],
 			"transformations": [
 				{
 					"name": "assert1"
@@ -87,7 +102,33 @@
 				"LocalStaging, source1 assert(expectExists(byName($MasterColiumnName, 'source1') == byName($MasterColiumnName, 'LocalStaging'), true, 'assert1', null, 'dosent match')) ~> assert1",
 				"assert1 derive(error = hasError('assert1')) ~> derivedColumn1",
 				"derivedColumn1 filter(not(isError())) ~> filter1",
-				"derivedColumn1 filter(isError()) ~> filter2"
+				"derivedColumn1 filter(isError()) ~> filter2",
+				"filter2 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('ErrorGold/',$File)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink1",
+				"filter1 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('gold/', $File)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
 			]
 		}
 	}

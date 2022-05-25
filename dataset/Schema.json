@@ -8,10 +8,9 @@
 		"annotations": [],
 		"type": "Excel",
 		"typeProperties": {
-			"sheetName": "Sheet1",
 			"location": {
 				"type": "AzureBlobFSLocation",
-				"fileName": "schemaMaster.xlsx",
+				"fileName": "schema.xlsx",
 				"fileSystem": "schema"
 			},
 			"firstRowAsHeader": true
