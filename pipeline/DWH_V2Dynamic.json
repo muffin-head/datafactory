@@ -1,5 +1,5 @@
 {
-	"name": "DWH_V2Test_copy1",
+	"name": "DWH_V2Dynamic",
 	"properties": {
 		"activities": [
 			{
@@ -104,6 +104,51 @@
 										},
 										"Date3record": {
 											"value": "'@{item().Date3Record}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						},
+						{
+							"name": "Data flow1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [
+								{
+									"activity": "InitialCopyDataflow_copy1_copy1",
+									"dependencyConditions": [
+										"Succeeded"
+									]
+								}
+							],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "DynamictestingV01Ref",
+									"type": "DataFlowReference",
+									"parameters": {
+										"File": {
+											"value": "'@{item().File}'",
+											"type": "Expression"
+										},
+										"MastertableName": {
+											"value": "'@{item().MastertableName}'",
+											"type": "Expression"
+										},
+										"MasterColiumnName": {
+											"value": "'@{item().MasterColiumnName}'",
 											"type": "Expression"
 										}
 									}

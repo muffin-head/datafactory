@@ -1,0 +1,94 @@
+{
+	"name": "DynamictestingV01Ref",
+	"properties": {
+		"folder": {
+			"name": "dynamic test"
+		},
+		"type": "MappingDataFlow",
+		"typeProperties": {
+			"sources": [
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage3",
+						"type": "LinkedServiceReference"
+					},
+					"name": "LocalStaging"
+				},
+				{
+					"linkedService": {
+						"referenceName": "AzureDataLakeStorage3",
+						"type": "LinkedServiceReference"
+					},
+					"name": "source1"
+				}
+			],
+			"sinks": [],
+			"transformations": [
+				{
+					"name": "assert1"
+				},
+				{
+					"name": "derivedColumn1"
+				},
+				{
+					"name": "filter1"
+				},
+				{
+					"name": "filter2"
+				}
+			],
+			"scriptLines": [
+				"parameters{",
+				"     File as string,",
+				"     MastertableName as string,",
+				"     MasterColiumnName as string",
+				"}",
+				"source(output(",
+				"          CashCentreID as short,",
+				"          CashCentreTypeID as short,",
+				"          RegionID as short,",
+				"          CashCentreCode as string,",
+				"          CashCentreDescription as string,",
+				"          CreatedBy as string,",
+				"          CreatedOn as string,",
+				"          UpdatedBy as string,",
+				"          UpdatedOn as string,",
+				"          DeletedBy as string,",
+				"          DeletedOn as string,",
+				"          RowLockVersion as string,",
+				"          IsActive as boolean",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'excel',",
+				"     fileSystem: 'slave',",
+				"     sheetName: 'test',",
+				"     firstRowAsHeader: true,",
+				"     wildcardPaths:[($File)]) ~> LocalStaging",
+				"source(output(",
+				"          CashCentreTypeID as short,",
+				"          CashCentreTypeCode as integer,",
+				"          CashCentreTypeDescription as string,",
+				"          RowLockVersion as short,",
+				"          IsActive as boolean,",
+				"          pass as string,",
+				"          {start date} as date,",
+				"          {end date} as string",
+				"     ),",
+				"     allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     ignoreNoFilesFound: false,",
+				"     format: 'excel',",
+				"     fileSystem: 'data',",
+				"     sheetName: 'Sheet1',",
+				"     firstRowAsHeader: true,",
+				"     wildcardPaths:[($MastertableName)]) ~> source1",
+				"LocalStaging, source1 assert(expectExists(byName($MasterColiumnName, 'source1') == byName($MasterColiumnName, 'LocalStaging'), true, 'assert1', null, 'dosent match')) ~> assert1",
+				"assert1 derive(error = hasError('assert1')) ~> derivedColumn1",
+				"derivedColumn1 filter(not(isError())) ~> filter1",
+				"derivedColumn1 filter(isError()) ~> filter2"
+			]
+		}
+	}
+}

@@ -1,0 +1,30 @@
+{
+	"name": "dynSchema",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "dynSchemaParam.xlsx",
+				"fileSystem": "schema"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "File",
+				"type": "String"
+			},
+			{
+				"name": "rule",
+				"type": "String"
+			}
+		]
+	}
+}
