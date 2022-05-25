@@ -19,7 +19,7 @@
 						"referenceName": "linkedService5",
 						"type": "LinkedServiceReference"
 					},
-					"name": "source1"
+					"name": "RefrenceFile"
 				}
 			],
 			"sinks": [
@@ -103,8 +103,8 @@
 				"     store: 'sqlserver',",
 				"     schemaName: 'dbo',",
 				"     tableName: (concat('silver/', $MastertableName)),",
-				"     isolationLevel: 'READ_UNCOMMITTED') ~> source1",
-				"LocalStaging, source1 assert(expectExists(byName($MasterColiumnName,'LocalStaging') == byName($MasterColiumnName,'source1'), true, 'assert1', null, 'dosent match')) ~> assert1",
+				"     isolationLevel: 'READ_UNCOMMITTED') ~> RefrenceFile",
+				"LocalStaging, RefrenceFile assert(expectExists(byName($MasterColiumnName,'LocalStaging') == byName($MasterColiumnName,'source1'), true, 'assert1', null, 'dosent match')) ~> assert1",
 				"assert1 derive(error = hasError('assert1')) ~> derivedColumn1",
 				"derivedColumn1 filter(not(isError())) ~> filter1",
 				"derivedColumn1 filter(isError()) ~> filter2",
