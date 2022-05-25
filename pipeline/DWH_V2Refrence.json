@@ -1,0 +1,127 @@
+{
+	"name": "DWH_V2Refrence",
+	"properties": {
+		"activities": [
+			{
+				"name": "LookupData",
+				"type": "Lookup",
+				"dependsOn": [],
+				"policy": {
+					"timeout": "7.00:00:00",
+					"retry": 0,
+					"retryIntervalInSeconds": 30,
+					"secureOutput": false,
+					"secureInput": false
+				},
+				"userProperties": [],
+				"typeProperties": {
+					"source": {
+						"type": "ExcelSource",
+						"storeSettings": {
+							"type": "AzureBlobFSReadSettings",
+							"recursive": true,
+							"enablePartitionDiscovery": false
+						}
+					},
+					"dataset": {
+						"referenceName": "Schema",
+						"type": "DatasetReference"
+					},
+					"firstRowOnly": false
+				}
+			},
+			{
+				"name": "ForEachDATA_copy1",
+				"type": "ForEach",
+				"dependsOn": [
+					{
+						"activity": "LookupData",
+						"dependencyConditions": [
+							"Succeeded"
+						]
+					}
+				],
+				"userProperties": [],
+				"typeProperties": {
+					"items": {
+						"value": "@activity('LookupData').output.value",
+						"type": "Expression"
+					},
+					"isSequential": true,
+					"activities": [
+						{
+							"name": "InitialCopyDataflow_copy1_copy1",
+							"type": "ExecuteDataFlow",
+							"dependsOn": [],
+							"policy": {
+								"timeout": "1.00:00:00",
+								"retry": 0,
+								"retryIntervalInSeconds": 30,
+								"secureOutput": false,
+								"secureInput": false
+							},
+							"userProperties": [],
+							"typeProperties": {
+								"dataflow": {
+									"referenceName": "DynamictestingV01",
+									"type": "DataFlowReference",
+									"parameters": {
+										"File": {
+											"value": "'@{item().File}'",
+											"type": "Expression"
+										},
+										"RecordLenValidate1": {
+											"value": "'@{item().RecordLenValidate1\n}'",
+											"type": "Expression"
+										},
+										"RecordLen1": {
+											"value": "@item().RecordLen1\n",
+											"type": "Expression"
+										},
+										"RecordLenValidate2": {
+											"value": "'@{item().RecordLenValidate2}'",
+											"type": "Expression"
+										},
+										"RecordLen2": {
+											"value": "@item().RecordLen2",
+											"type": "Expression"
+										},
+										"RecordSizeValidate": {
+											"value": "'@{item().RecordSizeValidate}'",
+											"type": "Expression"
+										},
+										"RecordSize": {
+											"value": "@item().RecordSize",
+											"type": "Expression"
+										},
+										"Date1Record": {
+											"value": "'@{item().Date1Record}'",
+											"type": "Expression"
+										},
+										"Date2record": {
+											"value": "'@{item().Date2Record}'",
+											"type": "Expression"
+										},
+										"Date3record": {
+											"value": "'@{item().Date3Record}'",
+											"type": "Expression"
+										}
+									}
+								},
+								"compute": {
+									"coreCount": 8,
+									"computeType": "General"
+								},
+								"traceLevel": "Fine"
+							}
+						}
+					]
+				}
+			}
+		],
+		"folder": {
+			"name": "dynamicTest"
+		},
+		"annotations": []
+	}
+}
