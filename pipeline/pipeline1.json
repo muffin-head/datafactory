@@ -63,16 +63,20 @@
 							"userProperties": [],
 							"typeProperties": {
 								"dataflow": {
-									"referenceName": "testing",
+									"referenceName": "dataflow3",
 									"type": "DataFlowReference",
 									"parameters": {
-										"file": {
-											"value": "'@{item().File}'",
-											"type": "Expression"
-										},
-										"rule": {
+										"filterRule": {
 											"value": "'@{item().rule}'",
 											"type": "Expression"
+										}
+									},
+									"datasetParameters": {
+										"source1": {
+											"FileName": {
+												"value": "@item().File",
+												"type": "Expression"
+											}
 										}
 									}
 								},
