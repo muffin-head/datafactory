@@ -1,0 +1,26 @@
+{
+	"name": "Excel14",
+	"properties": {
+		"linkedServiceName": {
+			"referenceName": "AzureDataLakeStorage3",
+			"type": "LinkedServiceReference"
+		},
+		"annotations": [],
+		"type": "Excel",
+		"typeProperties": {
+			"sheetName": "Sheet1",
+			"location": {
+				"type": "AzureBlobFSLocation",
+				"fileName": "mail.xlsx",
+				"fileSystem": "email"
+			},
+			"firstRowAsHeader": true
+		},
+		"schema": [
+			{
+				"name": "email",
+				"type": "String"
+			}
+		]
+	}
+}
