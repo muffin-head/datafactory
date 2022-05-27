@@ -69,14 +69,10 @@
 										"filterRule": {
 											"value": "'@{item().rule}'",
 											"type": "Expression"
-										}
-									},
-									"datasetParameters": {
-										"source1": {
-											"FileName": {
-												"value": "@item().File",
-												"type": "Expression"
-											}
+										},
+										"file": {
+											"value": "'@{item().File}'",
+											"type": "Expression"
 										}
 									}
 								},
