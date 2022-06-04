@@ -26,6 +26,13 @@
 						"type": "LinkedServiceReference"
 					},
 					"name": "sink2"
+				},
+				{
+					"linkedService": {
+						"referenceName": "linkedService5",
+						"type": "LinkedServiceReference"
+					},
+					"name": "sink3"
 				}
 			],
 			"transformations": [
@@ -34,6 +41,15 @@
 				},
 				{
 					"name": "filter2"
+				},
+				{
+					"name": "derivedColumn2"
+				},
+				{
+					"name": "filter3"
+				},
+				{
+					"name": "filter4"
 				}
 			],
 			"scriptLines": [
@@ -47,12 +63,15 @@
 				"     wildcardPaths:[($file)]) ~> source1",
 				"source1 filter(toBoolean(expr($filterRule))) ~> filter1",
 				"source1 filter(not(toBoolean(expr($filterRule)))) ~> filter2",
+				"source1 derive(RegexIFnecessary = (expr($filterRule))) ~> derivedColumn2",
+				"derivedColumn2 filter(not(isBoolean(toString(RegexIFnecessary)))) ~> filter3",
+				"filter3 filter(not(isNull(RegexIFnecessary))) ~> filter4",
 				"filter1 sink(allowSchemaDrift: true,",
 				"     validateSchema: false,",
 				"     format: 'table',",
 				"     store: 'sqlserver',",
 				"     schemaName: 'dbo',",
-				"     tableName: (concat('testing/',$file)),",
+				"     tableName: (concat('valid/',$file)),",
 				"     insertable: true,",
 				"     updateable: false,",
 				"     deletable: false,",
@@ -72,7 +91,20 @@
 				"     upsertable: false,",
 				"     skipDuplicateMapInputs: true,",
 				"     skipDuplicateMapOutputs: true,",
-				"     errorHandlingOption: 'stopOnFirstError') ~> sink2"
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink2",
+				"filter4 sink(allowSchemaDrift: true,",
+				"     validateSchema: false,",
+				"     format: 'table',",
+				"     store: 'sqlserver',",
+				"     schemaName: 'dbo',",
+				"     tableName: (concat('regex/',$file)),",
+				"     insertable: true,",
+				"     updateable: false,",
+				"     deletable: false,",
+				"     upsertable: false,",
+				"     skipDuplicateMapInputs: true,",
+				"     skipDuplicateMapOutputs: true,",
+				"     errorHandlingOption: 'stopOnFirstError') ~> sink3"
 			]
 		}
 	}
