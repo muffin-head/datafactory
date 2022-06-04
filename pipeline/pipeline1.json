@@ -82,23 +82,6 @@
 								},
 								"traceLevel": "Fine"
 							}
-						},
-						{
-							"name": "Fail1",
-							"type": "Fail",
-							"dependsOn": [
-								{
-									"activity": "Data flow1",
-									"dependencyConditions": [
-										"Succeeded"
-									]
-								}
-							],
-							"userProperties": [],
-							"typeProperties": {
-								"message": "401",
-								"errorCode": "tmp"
-							}
 						}
 					]
 				}
